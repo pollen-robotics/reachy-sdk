@@ -94,10 +94,7 @@ class Joint:
 
         for name, field in self._fields.items():
             if field.sync_evt.is_set():
-                value = field.protobuf_value_type()
-                value.value = field.value
-
-                args[name] = value
+                args[name] = field.protobuf_value_type(value=field.value)
                 field.sync_evt.clear()
 
         return JointCommand(**args)
