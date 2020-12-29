@@ -1,3 +1,5 @@
+import numpy as np
+
 from threading import Event
 from google.protobuf.wrappers_pb2 import BoolValue, FloatValue
 
@@ -32,11 +34,11 @@ class Joint:
 
     @property
     def present_position(self):
-        return self._fields['present_position'].value
+        return np.rad2deg(self._fields['present_position'].value)
 
     @property
     def present_speed(self):
-        return self._fields['present_speed'].value
+        return np.rad2deg(self._fields['present_speed'].value)
 
     @property
     def present_load(self):
@@ -48,19 +50,19 @@ class Joint:
 
     @property
     def goal_position(self):
-        return self._fields['goal_position'].value
+        return np.rad2deg(self._fields['goal_position'].value)
 
     @goal_position.setter
     def goal_position(self, value):
-        self._fields['goal_position'].request_value_update(value)
+        self._fields['goal_position'].request_value_update(np.deg2rad(value))
 
     @property
     def speed_limit(self):
-        return self._fields['speed_limit'].value
+        return np.rad2deg(self._fields['speed_limit'].value)
 
     @speed_limit.setter
     def speed_limit(self, value):
-        self._fields['speed_limit'].request_value_update(value)
+        self._fields['speed_limit'].request_value_update(np.deg2rad(value))
 
     @property
     def torque_limit(self):
@@ -76,6 +78,8 @@ class Joint:
 
     @compliant.setter
     def compliant(self, value):
+        if not value:
+            self.goal_position = self.present_position
         self._fields['compliant'].request_value_update(value)
 
     def _need_sync(self) -> bool:
