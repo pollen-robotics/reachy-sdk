@@ -7,13 +7,14 @@ from reachy_sdk_api.joint_command_pb2 import JointCommand
 
 
 class Joint:
-    def __init__(self, name: str,
+    def __init__(self, name: str, id: int,
                  present_position: float, present_speed: float, present_load: float, temperature: float,
                  goal_position: float, speed_limit: float, torque_limit: float,
                  compliant: bool,
                  # pid: (float, float, float),
                  ) -> None:
         self._name = name
+        self._id = id
 
         self._fields = {
             # TODO: Use metaclass instead (look at Django?)
@@ -90,7 +91,7 @@ class Joint:
         return False
 
     def _pop_sync_command(self) -> JointCommand:
-        args = {'name': self.name}
+        args = {'id': self._id}
 
         for name, field in self._fields.items():
             if field.sync_evt.is_set():
