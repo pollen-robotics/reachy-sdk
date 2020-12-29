@@ -6,7 +6,7 @@ from google.protobuf.empty_pb2 import Empty
 
 from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc
 from reachy_sdk_api.joint_state_pb2 import JointStateField, JointRequest, StreamAllJointsRequest
-from reachy_sdk_api.joint_command_pb2 import JointCommand
+from reachy_sdk_api.joint_command_pb2 import JointCommand, MultipleJointsCommand
 
 from .joint import Joint
 
@@ -53,7 +53,8 @@ class ReachySDK:
         t = []
         t.append(Thread(target=self._get_position_updates))
         t.append(Thread(target=self._get_temperature_updates))
-        t.append(Thread(target=self._send_commands))
+        # t.append(Thread(target=self._send_commands))
+        t.append(Thread(target=self._stream_commands))
 
         for tt in t:
             tt.daemon = True
@@ -77,6 +78,14 @@ class ReachySDK:
         for update in self._joint_state_stub.StreamAllJointsState(req):
             for joint, joint_state in zip(self.joints, update.joints):
                 joint._fields['temperature'].value = joint_state.temperature.value
+
+    def _stream_commands(self) -> None:
+        def cmd_gen():
+            while True:
+                yield MultipleJointsCommand(commands=self._waiting_commands())
+                time.sleep(1.0 / self._sync_freq)
+
+        self._joint_command_stub.StreamJointsCommand(cmd_gen())
 
     def _send_commands(self) -> None:
         while True:
