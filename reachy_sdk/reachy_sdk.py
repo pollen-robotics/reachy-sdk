@@ -83,7 +83,9 @@ class ReachySDK:
     def _stream_commands(self) -> None:
         def cmd_gen():
             while True:
-                yield MultipleJointsCommand(commands=self._waiting_commands())
+                commands = self._waiting_commands()
+                if commands:
+                    yield MultipleJointsCommand(commands=commands)
                 time.sleep(1.0 / self._sync_freq)
 
         self._joint_command_stub.StreamJointsCommand(cmd_gen())
