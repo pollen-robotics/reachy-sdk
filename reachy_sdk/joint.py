@@ -113,8 +113,9 @@ class Field:
         return f'<"{camelCase(self.name)}"={self.value}>'
 
     def request_value_update(self, value) -> None:
-        self.value = value
-        self.sync_evt.set()
+        if value != self.value:
+            self.value = value
+            self.sync_evt.set()
 
 
 def camelCase(st):
