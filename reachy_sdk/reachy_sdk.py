@@ -28,12 +28,13 @@ class ReachySDK:
 
         motor_names = self._joint_state_stub.GetAllJointNames(Empty())
 
-        for name in motor_names.names:
+        for id, name in enumerate(motor_names.names):
             joint_state = self._joint_state_stub.GetJointState(JointRequest(
                 name=name, requested_fields=[JointStateField.ALL],
             ))
             j = Joint(
                 name=joint_state.name,
+                id=id,
                 present_position=joint_state.present_position.value,
                 present_speed=joint_state.present_speed.value,
                 present_load=joint_state.present_load.value,
