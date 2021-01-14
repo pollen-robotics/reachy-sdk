@@ -1,27 +1,36 @@
+"""Reachy SDK."""
 import time
 from typing import List
+import cv2 as cv
+import numpy as np
 
 import grpc
 from google.protobuf.empty_pb2 import Empty
 
-from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc
+from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc, camera_pb2_grpc
 from reachy_sdk_api.joint_state_pb2 import JointStateField, JointRequest, StreamAllJointsRequest
 from reachy_sdk_api.joint_command_pb2 import JointCommand, MultipleJointsCommand
+from reachy_sdk_api.camera_pb2 import Image, Side
 
 from .joint import Joint
 
 
 class ReachySDK:
     def __init__(self, host: str = 'localhost', port: int = 50051, sync_freq: float = 100) -> None:
-        self._channel = grpc.insecure_channel(f'{host}:{port}')
+        options = [('grpc.max_send_message_length', 200000), ('grpc.max_receive_message_length', 200000)]
+        self._channel = grpc.insecure_channel(f'{host}:{port}', options=options)
         self._joint_state_stub = joint_state_pb2_grpc.JointStateServiceStub(self._channel)
         self._joint_command_stub = joint_command_pb2_grpc.JointCommandServiceStub(self._channel)
+        self._camera_stub = camera_pb2_grpc.CameraServiceStub(self._channel)
 
         self.joints: List[Joint] = []
         self._get_initial_joint_state()
 
         self._sync_freq = sync_freq
         self._run_sync_loop_in_bg()
+
+        self.left_image = None
+        self.right_image = None
 
     def _get_initial_joint_state(self) -> None:
         self.joints.clear()
@@ -56,6 +65,7 @@ class ReachySDK:
         t.append(Thread(target=self._get_temperature_updates))
         # t.append(Thread(target=self._send_commands))
         t.append(Thread(target=self._stream_commands))
+        t.append(Thread(target=self._get_image))
 
         for tt in t:
             tt.daemon = True
@@ -101,3 +111,13 @@ class ReachySDK:
             joint._pop_sync_command()
             for joint in self.joints if joint._need_sync()
         ]
+
+    def _get_image(self):
+        self.left_image = self._response_to_img(side='left')
+        self.right_image = self._response_to_img(side='right')
+
+    def _response_to_img(self, side):
+        response = self._camera_stub.GetImage(Side(side=side))
+        img = np.frombuffer(response.data, dtype=np.uint8)
+        img = cv.imdecode(img, cv.IMREAD_COLOR)
+        return img
