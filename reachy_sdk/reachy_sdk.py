@@ -12,8 +12,8 @@ from reachy_sdk_api import camera_pb2_grpc, load_sensor_pb2_grpc
 
 from reachy_sdk_api.joint_state_pb2 import JointStateField, JointRequest, StreamAllJointsRequest
 from reachy_sdk_api.joint_command_pb2 import JointCommand, MultipleJointsCommand
-from reachy_sdk_api.camera_pb2 import Side
-from reachy_sdk_api.load_sensor_pb2 import Side
+from reachy_sdk_api.camera_pb2 import Side as CamSide
+from reachy_sdk_api.load_sensor_pb2 import Side as LoadSide
 
 from .joint import Joint
 
@@ -100,8 +100,8 @@ class ReachySDK:
 
     def _get_load_sensor_updates(self) -> None:
         while True:
-            self.left_load_sensor = self._load_sensor_stub.GetLoad(Side(side='left')).load
-            self.rigt_load_sensor = self._load_sensor_stub.GetLoad(Side(side='right')).load
+            self.left_load_sensor = self._load_sensor_stub.GetLoad(LoadSide(side='left')).load
+            self.rigt_load_sensor = self._load_sensor_stub.GetLoad(LoadSide(side='right')).load
 
     def _stream_commands(self) -> None:
         def cmd_gen():
@@ -131,7 +131,7 @@ class ReachySDK:
             self.right_image = self._response_to_img(side='right')
 
     def _response_to_img(self, side):
-        response = self._camera_stub.GetImage(Side(side=side))
+        response = self._camera_stub.GetImage(CamSide(side=side))
         img = np.frombuffer(response.data, dtype=np.uint8)
         img = cv.imdecode(img, cv.IMREAD_COLOR)
         return img
