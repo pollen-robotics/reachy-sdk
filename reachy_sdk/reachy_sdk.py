@@ -79,7 +79,7 @@ class ReachySDK:
         t.append(Thread(target=self._get_load_sensor_updates))
         # t.append(Thread(target=self._send_commands))
         t.append(Thread(target=self._stream_commands))
-        #t.append(Thread(target=self._get_image))
+        t.append(Thread(target=self._get_image))
 
         for tt in t:
             tt.daemon = True
