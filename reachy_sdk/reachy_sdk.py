@@ -8,7 +8,8 @@ import grpc
 from google.protobuf.empty_pb2 import Empty
 
 from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc
-from reachy_sdk_api import camera_reachy_pb2_grpc, load_sensor_pb2_grpc, arm_kinematics_pb2_grpc
+from reachy_sdk_api import camera_reachy_pb2_grpc, load_sensor_pb2_grpc
+from reachy_sdk_api import arm_kinematics_pb2_grpc, zoom_command_pb2_grpc
 
 from reachy_sdk_api.joint_state_pb2 import JointStateField, JointRequest, StreamAllJointsRequest
 from reachy_sdk_api.joint_command_pb2 import JointCommand, MultipleJointsCommand
@@ -16,6 +17,7 @@ from reachy_sdk_api.camera_reachy_pb2 import Side as CamSide
 from reachy_sdk_api.load_sensor_pb2 import Side as LoadSide
 from reachy_sdk_api.arm_kinematics_pb2 import ArmEndEffector, ArmJointsPosition, ArmSide
 from reachy_sdk_api.kinematics_pb2 import JointsPosition, Matrix4x4
+from reachy_sdk_api.zoom_command_pb2 import ZoomCommand, ZoomSpeed
 
 from .joint import Joint
 
@@ -32,6 +34,7 @@ class ReachySDK:
         self._load_sensor_stub = load_sensor_pb2_grpc.LoadServiceStub(self._channel)
         self._camera_stub = camera_reachy_pb2_grpc.CameraServiceStub(self._channel)
         self._arm_kinematics_stub = arm_kinematics_pb2_grpc.ArmKinematicStub(self._channel)
+        self._zoom_controller_stub = zoom_command_pb2_grpc.ZoomControllerServiceStub(self._channel)
 
         self.joints: List[Joint] = []
         self._get_initial_joint_state()
@@ -165,3 +168,30 @@ class ReachySDK:
             )
         response = self._arm_kinematics_stub.ComputeArmIK(req)
         return response.positions.positions
+
+    def zoom_command(self, side, command):
+        '''Send command to Reachy's zoom.
+        
+        Args:
+            side (str): which camera to send the command to. ('right' or 'left')
+            command (str): type of command to send. ('homing', 'in', 'inter' or 'out')
+                'homing': the required zoom camera will perform homing. 
+                    Do it once before changing the zoom level.
+                'in': change zoom to see far objects
+                'out': change zoom to see close objects
+                'inter': zoom level between 'in' and 'out'
+        '''
+        req = ZoomCommand(
+            side=side,
+            command=command
+        )
+        self._zoom_controller_stub.SendZoomCommand(req)
+
+    def set_zoom_speed(self, speed):
+        '''Change the speed of zoom motors.
+        
+        Args:
+            speed (int): motors speed, must be between 4000 and 40000.
+        '''
+        self._zoom_controller_stub.SetZoomSpeed(ZoomSpeed(speed=speed))
+        
