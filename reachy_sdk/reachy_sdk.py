@@ -110,7 +110,7 @@ class ReachySDK:
     def _get_load_sensor_updates(self) -> None:
         while True:
             self.left_load_sensor = self._load_sensor_stub.GetLoad(LoadSide(side='left')).load
-            self.rigt_load_sensor = self._load_sensor_stub.GetLoad(LoadSide(side='right')).load
+            self.right_load_sensor = self._load_sensor_stub.GetLoad(LoadSide(side='right')).load
 
     def _stream_commands(self) -> None:
         def cmd_gen():
