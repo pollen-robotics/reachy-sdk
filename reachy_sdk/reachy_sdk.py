@@ -143,7 +143,16 @@ class ReachySDK:
         return img
 
     def forward_kinematics(self, arm_side, joints_positions):
-        '''Get from the sdk_server the forward kinematics for a given arm.'''
+        '''Get from the sdk_server the forward kinematics for a given arm.
+
+        Args:
+            arm_side (str): required arm
+            joints_positions ([float]): list of the present_position of each joints.
+                len(joints_positions) should be equal to 7.
+
+        Returns:
+            :py:class:'~numpy.ndarray': 4x4 homogeneous matrix pose of the end effector
+        '''
         joints = JointsPosition(positions=joints_positions)
 
         req = ArmJointsPosition(
@@ -154,7 +163,17 @@ class ReachySDK:
         return np.array(response.target.data).reshape((4,4))
 
     def inverse_kinematics(self, arm_side, target, q0):
-        '''Get from the sdk_server the inverse kinematics for a given arm.'''
+        '''Get from the sdk_server the inverse kinematics for a given arm.
+
+        Args:
+            arm_side (str): required arm
+            target (:py:class:`~numpy.ndarray`): 4*4 homogeneous matrix pose for the end effector
+            q0 ([float]): list containing the present_position of each motor joint. 
+                q0 is used to optimize the inverse kinematics computation time.
+
+        Returns:
+            [float]: list containing the goal_position of each motor joint to reach the target
+        '''
         joints = JointsPosition(positions=q0)
         target_proto = Matrix4x4(data=np.ndarray.flatten(target))
 
