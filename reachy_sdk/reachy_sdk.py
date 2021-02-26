@@ -8,7 +8,7 @@ import numpy as np
 import grpc
 from google.protobuf.empty_pb2 import Empty
 
-from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc
+from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc, kinematics_pb2_grpc
 from reachy_sdk_api import camera_reachy_pb2_grpc, load_sensor_pb2_grpc
 from reachy_sdk_api import arm_kinematics_pb2_grpc, zoom_command_pb2_grpc
 from reachy_sdk_api import cartesian_command_pb2_grpc, orbita_kinematics_pb2_grpc
@@ -22,10 +22,10 @@ from reachy_sdk_api.kinematics_pb2 import JointsPosition, Matrix4x4
 from reachy_sdk_api.zoom_command_pb2 import ZoomCommand, ZoomSpeed
 from reachy_sdk_api.orbita_kinematics_pb2 import Point
 from reachy_sdk_api.cartesian_command_pb2 import FullBodyCartesianCommand
+from reachy_sdk_api.kinematics_pb2 import MinjerkRequest
 
 from .joint import Joint
 
-from reachy_arm_kinematics.utils import minjerk
 
 side_to_proto = {'left': ArmSide.LEFT, 'right': ArmSide.RIGHT}
 
@@ -42,6 +42,7 @@ class ReachySDK:
         self._zoom_controller_stub = zoom_command_pb2_grpc.ZoomControllerServiceStub(self._channel)
         self._orbita_stub = orbita_kinematics_pb2_grpc.OrbitaKinematicStub(self._channel)
         self._cartesian_stub = cartesian_command_pb2_grpc.CartesianCommandServiceStub(self._channel)
+        self._kinematics_stub = kinematics_pb2_grpc.KinematicsServiceStub(self._channel)
 
         self.joints: List[Joint] = []
         self._get_initial_joint_state()
@@ -242,7 +243,13 @@ class ReachySDK:
 
         trajs = np.transpose(
             np.array(
-                [minjerk(initial_position=np.deg2rad(d.present_position), goal_position=g, duration=duration) for d,g in zip(disks,disks_goals)]
+                [self._kinematics_stub.ComputeMinjerk(
+                    MinjerkRequest(
+                        present_position=FloatValue(value=np.deg2rad(d.present_position)),
+                        goal_position=FloatValue(value=g),
+                        duration=FloatValue(value=duration)
+                    )
+                ).positions for d,g in zip(disks,disks_goals)]
             )
         )
 
@@ -256,6 +263,7 @@ class ReachySDK:
                     ]
             )
             self._joint_command_stub.SendAllJointsCommand(cmd)
+
 
     @property
     def head_stiff(self):
