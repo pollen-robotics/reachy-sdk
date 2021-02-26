@@ -2,6 +2,7 @@
 import time
 from typing import List
 import cv2 as cv
+from google.protobuf.wrappers_pb2 import FloatValue
 import numpy as np
 
 import grpc
@@ -24,6 +25,7 @@ from reachy_sdk_api.cartesian_command_pb2 import FullBodyCartesianCommand
 
 from .joint import Joint
 
+from reachy_arm_kinematics.utils import minjerk
 
 side_to_proto = {'left': ArmSide.LEFT, 'right': ArmSide.RIGHT}
 
@@ -219,7 +221,7 @@ class ReachySDK:
         '''
         self._zoom_controller_stub.SetZoomSpeed(ZoomSpeed(speed=speed))
         
-    def look_at(self, x: float, y: float, z: float):
+    def look_at(self, x: float, y: float, z: float, duration: float):
         '''Perform look_at on Orbita.
 
         Args:
@@ -232,8 +234,37 @@ class ReachySDK:
                 z=z,
             )
         )
-        self._cartesian_stub.SendCartesianCommand(
-            FullBodyCartesianCommand(
-                orbita_target=quat
+
+        disks_goals = self._orbita_stub.ComputeOrbitaIK(
+            quat
+        ).positions
+        disks = [self.neck_disk_top, self.neck_disk_middle, self.neck_disk_bottom]
+
+        trajs = np.transpose(
+            np.array(
+                [minjerk(initial_position=np.deg2rad(d.present_position), goal_position=g, duration=duration) for d,g in zip(disks,disks_goals)]
             )
         )
+
+        ids = [18,19,20] # disks id in joint_state publisher list
+
+        for i in range(len(trajs)):
+            cmd =  MultipleJointsCommand(
+                    commands=[
+                        JointCommand(id=id, goal_position=FloatValue(value=trajs[i][id-18]))
+                        for id in ids
+                    ]
+            )
+            self._joint_command_stub.SendAllJointsCommand(cmd)
+
+    @property
+    def head_stiff(self):
+        self.neck_disk_top.compliant = False
+        self.neck_disk_middle.compliant = False
+        self.neck_disk_bottom.compliant = False
+
+    @property
+    def head_compliant(self):
+        self.neck_disk_top.compliant = True
+        self.neck_disk_middle.compliant = True
+        self.neck_disk_bottom.compliant = True
