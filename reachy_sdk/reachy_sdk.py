@@ -2,14 +2,16 @@
 import time
 from typing import List
 import cv2 as cv
+from google.protobuf.wrappers_pb2 import FloatValue
 import numpy as np
 
 import grpc
 from google.protobuf.empty_pb2 import Empty
 
-from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc
+from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc, kinematics_pb2_grpc
 from reachy_sdk_api import camera_reachy_pb2_grpc, load_sensor_pb2_grpc
 from reachy_sdk_api import arm_kinematics_pb2_grpc, zoom_command_pb2_grpc
+from reachy_sdk_api import cartesian_command_pb2_grpc, orbita_kinematics_pb2_grpc
 
 from reachy_sdk_api.joint_state_pb2 import JointStateField, JointRequest, StreamAllJointsRequest
 from reachy_sdk_api.joint_command_pb2 import JointCommand, MultipleJointsCommand
@@ -18,6 +20,9 @@ from reachy_sdk_api.load_sensor_pb2 import Side as LoadSide
 from reachy_sdk_api.arm_kinematics_pb2 import ArmEndEffector, ArmJointsPosition, ArmSide
 from reachy_sdk_api.kinematics_pb2 import JointsPosition, Matrix4x4
 from reachy_sdk_api.zoom_command_pb2 import ZoomCommand, ZoomSpeed
+from reachy_sdk_api.orbita_kinematics_pb2 import Point
+from reachy_sdk_api.cartesian_command_pb2 import FullBodyCartesianCommand
+from reachy_sdk_api.kinematics_pb2 import MinjerkRequest
 
 from .joint import Joint
 
@@ -35,6 +40,9 @@ class ReachySDK:
         self._camera_stub = camera_reachy_pb2_grpc.CameraServiceStub(self._channel)
         self._arm_kinematics_stub = arm_kinematics_pb2_grpc.ArmKinematicStub(self._channel)
         self._zoom_controller_stub = zoom_command_pb2_grpc.ZoomControllerServiceStub(self._channel)
+        self._orbita_stub = orbita_kinematics_pb2_grpc.OrbitaKinematicStub(self._channel)
+        self._cartesian_stub = cartesian_command_pb2_grpc.CartesianCommandServiceStub(self._channel)
+        self._kinematics_stub = kinematics_pb2_grpc.KinematicsServiceStub(self._channel)
 
         self.joints: List[Joint] = []
         self._get_initial_joint_state()
@@ -214,3 +222,56 @@ class ReachySDK:
         '''
         self._zoom_controller_stub.SetZoomSpeed(ZoomSpeed(speed=speed))
         
+    def look_at(self, x: float, y: float, z: float, duration: float):
+        '''Perform look_at on Orbita.
+
+        Args:
+            x, y, z (float): coordinates of the point to look_at in the robot frame
+        '''
+        quat = self._orbita_stub.GetQuaternionTransform(
+            Point(
+                x=x,
+                y=y,
+                z=z,
+            )
+        )
+        disks_goals = self._orbita_stub.ComputeOrbitaIK(
+            quat
+        ).sol.positions
+        disks = [self.neck_disk_top, self.neck_disk_middle, self.neck_disk_bottom]
+
+        trajs = np.transpose(
+            np.array(
+                [self._kinematics_stub.ComputeMinjerk(
+                    MinjerkRequest(
+                        present_position=FloatValue(value=np.deg2rad(d.present_position)),
+                        goal_position=FloatValue(value=g),
+                        duration=FloatValue(value=duration)
+                    )
+                ).positions for d,g in zip(disks,disks_goals)]
+            )
+        )
+
+        ids = [18,19,20] # disks id in joint_state publisher list
+
+        for i in range(len(trajs)):
+            cmd =  MultipleJointsCommand(
+                    commands=[
+                        JointCommand(id=id, goal_position=FloatValue(value=trajs[i][id-18]))
+                        for id in ids
+                    ]
+            )
+            self._joint_command_stub.SendAllJointsCommand(cmd)
+
+
+    @property
+    def head_stiff(self):
+        self.neck_disk_top.compliant = False
+        self.neck_disk_middle.compliant = False
+        self.neck_disk_bottom.compliant = False
+
+    @property
+    def head_compliant(self):
+        self.neck_disk_top.compliant = True
+        self.neck_disk_middle.compliant = True
+        self.neck_disk_bottom.compliant = True
