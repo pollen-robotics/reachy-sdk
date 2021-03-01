@@ -235,10 +235,9 @@ class ReachySDK:
                 z=z,
             )
         )
-
         disks_goals = self._orbita_stub.ComputeOrbitaIK(
             quat
-        ).positions
+        ).sol.positions
         disks = [self.neck_disk_top, self.neck_disk_middle, self.neck_disk_bottom]
 
         trajs = np.transpose(
