@@ -38,7 +38,7 @@ class Arm(ABC):
             )
 
         if not use_rad:
-            joints_position = np.deg2rad(pos)
+            pos = np.deg2rad(pos)
 
         req = ArmFKRequest(arm_position=self._arm_position_from_pos(pos))
         resp = self._kin_stub.ComputeArmFK(req)
