@@ -25,39 +25,47 @@ class Arm(ABC):
         if len(self.joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
-        self._joint_ids = [JointId(uid=j.uid) for j in self.joints]
+        self.kinematics_chain = [j for j in self.joints if j.name in self._kinematics_chain]
 
     @property
     def _side(self) -> str:
         ...
 
-    def forward_kinematics(self, joints_position: Optional[List[float]] = None, use_rad: bool = False) -> np.ndarray:
+    def forward_kinematics(self, joints_position: Optional[List[float]] = None) -> np.ndarray:
         if joints_position is None:
-            joints_position = [j.present_position for j in self.joints]
+            joints_position = [j.present_position for j in self.kinematics_chain]
 
-        pos = list(joints_position)
+        if isinstance(joints_position, np.ndarray) and len(joints_position.shape) > 1:
+            raise ValueError('Vectorized kinematics not supported!')
 
-        if len(pos) != len(self._required_joints):
+        pos = np.deg2rad(joints_position)
+
+        if len(pos) != len(self._kinematics_chain):
             raise ValueError(
-                f'joints_position should be length {len(self._required_joints)} (got {len(pos)} instead)!'
+                f'joints_position should be length {len(self._kinematics_chain)} (got {len(pos)} instead)!'
             )
 
-        if not use_rad:
-            pos = np.deg2rad(pos)
-
-        req = ArmFKRequest(arm_position=self._arm_position_from_pos(pos))
+        req = ArmFKRequest(
+            arm_position=ArmJointPosition(
+                side=self._arm_side,
+                positions=self._joint_position_from_pos(pos),
+            ),
+        )
         resp = self._kin_stub.ComputeArmFK(req)
         if not resp.success:
             raise ValueError(f'No solution found for the given joints ({joints_position})!')
 
         return np.array(resp.end_effector.pose.data).reshape((4, 4))
 
-    def inverse_kinematics(self, target: np.ndarray, q0: Optional[List[float]]) -> List[float]:
+    def inverse_kinematics(self, target: np.ndarray, q0: Optional[List[float]] = None) -> List[float]:
         if target.shape != (4, 4):
             raise ValueError('target shape should be (4, 4) (got {target.shape} instead)!')
 
-        if q0 is not None and (len(q0) != len(self._required_joints)):
-            raise ValueError(f'q0 should be length {len(self._required_joints)} (got {len(q0)} instead)!')
+        if q0 is not None and (len(q0) != len(self._kinematics_chain)):
+            raise ValueError(f'q0 should be length {len(self._kinematics_chain)} (got {len(q0)} instead)!')
+
+        if isinstance(q0, np.ndarray) and len(q0.shape) > 1:
+            raise ValueError('Vectorized kinematics not supported!')
 
         req_params = {
             'target': ArmEndEffector(
@@ -67,7 +75,7 @@ class Arm(ABC):
         }
 
         if q0 is not None:
-            req_params['q0'] = self._arm_position_from_pos(q0)
+            req_params['q0'] = self._joint_position_from_pos(q0)
 
         req = ArmIKRequest(**req_params)
         resp = self._kin_stub.ComputeArmIK(req)
@@ -75,7 +83,11 @@ class Arm(ABC):
         if not resp.success:
             raise ValueError(f'No solution found for the given target ({target})!')
 
-        return resp.arm_position.positions.positions
+        return np.rad2deg(resp.arm_position.positions.positions).tolist()
+
+    @property
+    def _kinematics_chain(self) -> List[str]:
+        ...
 
     @property
     def _required_joints(self) -> Set[str]:
@@ -85,29 +97,38 @@ class Arm(ABC):
     def _arm_side(self):
         return ArmSide.LEFT if self._side == 'left' else ArmSide.RIGHT
 
-    def _arm_position_from_pos(self, joints_position: List[float]) -> ArmJointPosition:
-        return ArmJointPosition(
-            side=self._arm_side,
-            positions=JointPosition(
-                ids=self._joint_ids,
-                positions=joints_position,
-            )
+    def _joint_position_from_pos(self, joints_position: List[float]) -> ArmJointPosition:
+        return JointPosition(
+            ids=[JointId(uid=j.uid) for j in self.kinematics_chain],
+            positions=joints_position,
         )
 
 
 class LeftArm(Arm):
     _side = 'left'
+    _kinematics_chain = (
+        'l_shoulder_pitch', 'l_shoulder_roll', 'l_arm_yaw',
+        'l_elbow_pitch', 'l_forearm_yaw',
+        'l_wrist_pitch', 'l_wrist_roll',
+    )
     _required_joints = {
         'l_shoulder_pitch', 'l_shoulder_roll', 'l_arm_yaw',
         'l_elbow_pitch', 'l_forearm_yaw',
         'l_wrist_pitch', 'l_wrist_roll',
+        'l_gripper',
     }
 
 
 class RightArm(Arm):
     _side = 'right'
+    _kinematics_chain = (
+        'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
+        'r_elbow_pitch', 'r_forearm_yaw',
+        'r_wrist_pitch', 'r_wrist_roll',
+    )
     _required_joints = {
         'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
         'r_elbow_pitch', 'r_forearm_yaw',
         'r_wrist_pitch', 'r_wrist_roll',
+        'r_gripper',
     }
