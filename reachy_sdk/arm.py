@@ -23,7 +23,7 @@ class Arm(ABC):
         self._joint_ids = [JointId(uid=j.uid) for j in self.joints]
 
     @property
-    def side(self) -> str:
+    def _side(self) -> str:
         ...
 
     def forward_kinematics(self, joints_position: Optional[List[float]] = None, use_rad: bool = False) -> np.ndarray:
@@ -78,7 +78,7 @@ class Arm(ABC):
 
     @property
     def _arm_side(self):
-        return ArmSide.LEFT if self.side == 'left' else ArmSide.RIGHT
+        return ArmSide.LEFT if self._side == 'left' else ArmSide.RIGHT
 
     def _arm_position_from_pos(self, joints_position: List[float]) -> ArmJointPosition:
         return ArmJointPosition(
@@ -91,12 +91,19 @@ class Arm(ABC):
 
 
 class LeftArm(Arm):
-    @property
-    def side(self):
-        return 'left'
+    _side = 'left'
+    _required_joints = {
+        'l_shoulder_pitch', 'l_shoulder_roll', 'l_arm_yaw',
+        'l_elbow_pitch', 'l_forearm_yaw',
+        'l_wrist_pitch', 'l_wrist_roll',
+        'bob'
+    }
 
 
 class RightArm(Arm):
-    @property
-    def side(self):
-        return 'right'
+    _side = 'right'
+    _required_joints = {
+        'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
+        'r_elbow_pitch', 'r_forearm_yaw',
+        'r_wrist_pitch', 'r_wrist_roll',
+    }
