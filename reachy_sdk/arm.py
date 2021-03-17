@@ -5,10 +5,15 @@ import numpy as np
 
 from reachy_sdk_api.arm_kinematics_pb2_grpc import ArmKinematicsStub
 from reachy_sdk_api.arm_kinematics_pb2 import ArmEndEffector, ArmFKRequest, ArmIKRequest, ArmJointPosition, ArmSide
-from reachy_sdk_api.kinematics_pb2 import JointPosition, Matrix4x4
-from reachy_sdk_api.joint_pb2 import JointId
+from reachy_sdk_api.kinematics_pb2 import joint__pb2
+from reachy_sdk_api.arm_kinematics_pb2 import kinematics__pb2
 
 from .joint import Joint
+
+# Circumvent https://github.com/grpc/grpc/issues/18139
+JointId = joint__pb2.JointId
+JointPosition = kinematics__pb2.JointPosition
+Matrix4x4 = kinematics__pb2.Matrix4x4
 
 
 class Arm(ABC):
