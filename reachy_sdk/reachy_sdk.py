@@ -24,6 +24,7 @@ from reachy_sdk_api.orbita_kinematics_pb2 import Point
 from reachy_sdk_api.cartesian_command_pb2 import FullBodyCartesianCommand
 from reachy_sdk_api.kinematics_pb2 import MinjerkRequest
 
+from .arm import LeftArm, RightArm
 from .joint import Joint
 
 
@@ -31,27 +32,21 @@ side_to_proto = {'left': ArmSide.LEFT, 'right': ArmSide.RIGHT}
 
 
 class ReachySDK:
-    def __init__(self, host: str = 'localhost', port: int = 50055, sync_freq: float = 100) -> None:
-        options = [('grpc.max_send_message_length', 200000), ('grpc.max_receive_message_length', 200000)]
-        self._channel = grpc.insecure_channel(f'{host}:{port}', options=options)
-        self._joint_state_stub = joint_state_pb2_grpc.JointStateServiceStub(self._channel)
-        self._joint_command_stub = joint_command_pb2_grpc.JointCommandServiceStub(self._channel)
-        self._load_sensor_stub = load_sensor_pb2_grpc.LoadServiceStub(self._channel)
-        self._camera_stub = camera_reachy_pb2_grpc.CameraServiceStub(self._channel)
-        self._arm_kinematics_stub = arm_kinematics_pb2_grpc.ArmKinematicStub(self._channel)
-        self._zoom_controller_stub = zoom_command_pb2_grpc.ZoomControllerServiceStub(self._channel)
-        self._orbita_stub = orbita_kinematics_pb2_grpc.OrbitaKinematicStub(self._channel)
-        self._cartesian_stub = cartesian_command_pb2_grpc.CartesianCommandServiceStub(self._channel)
-        self._kinematics_stub = kinematics_pb2_grpc.KinematicsServiceStub(self._channel)
+    def __init__(self, host: str, sdk_port: int = 50055) -> None:
+        self._host = host
+        self._sdk_port = sdk_port
+        self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
         self.joints: List[Joint] = []
-        self._get_initial_joint_state()
+
+        self._setup_joints()
+        self._setup_arms()
 
         self._sync_freq = sync_freq
         self._run_sync_loop_in_bg()
 
-        self.left_image = None
-        self.right_image = None
+    def _setup_joints(self):
+        joint_stub = joint_pb2_grpc.JointServiceStub(self._grpc_channel)
 
         self.left_load_sensor = 0
         self.right_load_sensor = 0
@@ -81,25 +76,29 @@ class ReachySDK:
             setattr(self, name, j)
             self.joints.append(j)
 
-    def _run_sync_loop_in_bg(self) -> None:
-        from threading import Thread
+    def _setup_arms(self):
+        try:
+            left_arm = LeftArm(self.joints, self._grpc_channel)
+            setattr(self, 'l_arm', left_arm)
+        except ValueError:
+            pass
 
-        t = []
-        t.append(Thread(target=self._get_position_updates))
-        t.append(Thread(target=self._get_temperature_updates))
-        t.append(Thread(target=self._get_load_sensor_updates))
-        # t.append(Thread(target=self._send_commands))
-        t.append(Thread(target=self._stream_commands))
-        t.append(Thread(target=self._get_image))
+        try:
+            right_arm = RightArm(self.joints, self._grpc_channel)
+            setattr(self, 'r_arm', right_arm)
+        except ValueError:
+            pass
 
-        for tt in t:
-            tt.daemon = True
-            tt.start()
-
-    def _get_position_updates(self) -> None:
-        req = StreamAllJointsRequest(
-            requested_fields=[JointStateField.PRESENT_POSITION],
-            publish_frequency=self._sync_freq,
+    async def _poll_waiting_commands(self):
+        await asyncio.wait(
+            [asyncio.create_task(joint._need_sync.wait()) for joint in self.joints],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        return joint_pb2.JointsCommand(
+            commands=[
+                joint._pop_command()
+                for joint in self.joints if joint._need_sync.is_set()
+            ],
         )
 
         for update in self._joint_state_stub.StreamAllJointsState(req):
