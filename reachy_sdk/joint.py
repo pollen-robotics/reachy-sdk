@@ -57,7 +57,7 @@ class Joint(metaclass=MetaRegister):
     def __repr__(self):
         """Clean representation of a joint basic state."""
         mode = "compliant" if self.compliant else "stiff"
-        return f'<Joint name="{self.name}" pos="{self.present_position}" mode="{mode}">'
+        return f'<Joint name="{self.name}" pos="{self.present_position:.2f}" mode="{mode}">'
 
     def registers(self):
         """Return a dict[name, value] of all the Joint registers."""

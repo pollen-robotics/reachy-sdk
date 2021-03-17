@@ -8,6 +8,7 @@ from google.protobuf.empty_pb2 import Empty
 
 from reachy_sdk_api import joint_pb2, joint_pb2_grpc
 
+from .arm import LeftArm, RightArm
 from .joint import Joint
 
 
@@ -15,17 +16,19 @@ class ReachySDK:
     def __init__(self, host: str, sdk_port: int = 50055) -> None:
         self._host = host
         self._sdk_port = sdk_port
+        self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
         self.joints: List[Joint] = []
-        self._setup_all_joints()
+
+        self._setup_joints()
+        self._setup_arms()
 
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
         self._sync_thread.start()
 
-    def _setup_all_joints(self):
-        channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
-        joint_stub = joint_pb2_grpc.JointServiceStub(channel)
+    def _setup_joints(self):
+        joint_stub = joint_pb2_grpc.JointServiceStub(self._grpc_channel)
 
         joint_ids = joint_stub.GetAllJointsId(Empty())
         self._joint_uid_to_name = dict(zip(joint_ids.uids, joint_ids.names))
@@ -42,6 +45,19 @@ class ReachySDK:
 
             self.joints.append(joint)
             setattr(self, joint.name, joint)
+
+    def _setup_arms(self):
+        try:
+            left_arm = LeftArm(self.joints, self._grpc_channel)
+            setattr(self, 'l_arm', left_arm)
+        except ValueError:
+            pass
+
+        try:
+            right_arm = RightArm(self.joints, self._grpc_channel)
+            setattr(self, 'r_arm', right_arm)
+        except ValueError:
+            pass
 
     async def _poll_waiting_commands(self):
         await asyncio.wait(
