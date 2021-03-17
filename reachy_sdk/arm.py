@@ -96,7 +96,6 @@ class LeftArm(Arm):
         'l_shoulder_pitch', 'l_shoulder_roll', 'l_arm_yaw',
         'l_elbow_pitch', 'l_forearm_yaw',
         'l_wrist_pitch', 'l_wrist_roll',
-        'bob'
     }
 
 
