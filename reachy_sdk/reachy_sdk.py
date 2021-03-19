@@ -11,9 +11,11 @@ from google.protobuf.empty_pb2 import Empty
 
 from reachy_sdk_api import joint_pb2, joint_pb2_grpc
 from reachy_sdk_api import fan_pb2_grpc
+from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
 
 from .arm import LeftArm, RightArm
 from .fan import Fan
+from .force_sensor import ForceSensor
 from .joint import Joint
 from .trajectory.interpolation import InterpolationMode
 
@@ -26,10 +28,12 @@ class ReachySDK:
 
         self.joints: List[Joint] = []
         self.fans: List[Fan] = []
+        self.force_sensors: List[ForceSensor] = []
 
         self._setup_joints()
         self._setup_arms()
         self._setup_fans()
+        self._setup_force_sensors()
 
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
@@ -133,6 +137,22 @@ class ReachySDK:
             setattr(self, name, fan)
             self.fans.append(fan)
 
+    def _setup_force_sensors(self):
+        force_stub = sensor_pb2_grpc.SensorServiceStub(self._grpc_channel)
+        resp = force_stub.GetAllForceSensorsId(Empty())
+        names, uids = resp.names, resp.uids
+
+        print(sensor_pb2.SensorsStateRequest(ids=[sensor_pb2.SensorId(uid=uid) for uid in uids]))
+
+        resp = force_stub.GetSensorsState(
+            sensor_pb2.SensorsStateRequest(ids=[sensor_pb2.SensorId(uid=uid) for uid in uids]),
+        )
+        states = resp.states
+        for name, uid, state in zip(names, uids, states):
+            force_sensor = ForceSensor(name, uid, state.force_sensor_state)
+            setattr(self, name, force_sensor)
+            self.force_sensors.append(force_sensor)
+
     async def _poll_waiting_commands(self):
         await asyncio.wait(
             [asyncio.create_task(joint._need_sync.wait()) for joint in self.joints],
@@ -162,6 +182,19 @@ class ReachySDK:
                 joint = self._get_joint_from_id(joint_id)
                 joint._update_with(state)
 
+    async def _get_stream_sensor_loop(self, async_channel, freq: float):
+        stub = sensor_pb2_grpc.SensorServiceStub(async_channel)
+        stream_req = sensor_pb2.StreamSensorsStateRequest(
+            request=sensor_pb2.SensorsStateRequest(
+                ids=[sensor_pb2.SensorId(uid=sensor.uid) for sensor in self.force_sensors],
+            ),
+            publish_frequency=freq,
+        )
+        async for state_update in stub.StreamSensorStates(stream_req):
+            for sensor_id, state in zip(state_update.ids, state_update.states):
+                sensor = self._get_sensor_from_id(sensor_id)
+                sensor._update_with(state.force_sensor_state)
+
     async def _stream_commands_loop(self, joint_stub, freq: float):
         async def command_poll():
             last_pub = 0
@@ -182,12 +215,13 @@ class ReachySDK:
         for joint in self.joints:
             joint._setup_sync_loop()
 
-        channel = grpc.aio.insecure_channel(f'{self._host}:{self._sdk_port}')
-        joint_stub = joint_pb2_grpc.JointServiceStub(channel)
+        async_channel = grpc.aio.insecure_channel(f'{self._host}:{self._sdk_port}')
+        joint_stub = joint_pb2_grpc.JointServiceStub(async_channel)
 
         await asyncio.gather(
             self._get_stream_update_loop(joint_stub, fields=[joint_pb2.JointField.PRESENT_POSITION], freq=100),
             self._get_stream_update_loop(joint_stub, fields=[joint_pb2.JointField.TEMPERATURE], freq=0.1),
+            self._get_stream_sensor_loop(async_channel, freq=10),
             self._stream_commands_loop(joint_stub, freq=100),
         )
 
@@ -196,3 +230,12 @@ class ReachySDK:
             return getattr(self, self._joint_uid_to_name[joint_id.uid])
         else:
             return getattr(self, joint_id.name)
+
+    def _get_sensor_from_id(self, sensor_id: sensor_pb2.SensorId) -> ForceSensor:
+        if sensor_id.HasField('uid'):
+            for sensor in self.force_sensors:
+                if sensor.uid == sensor_id.uid:
+                    return sensor
+            raise IndexError
+        else:
+            return getattr(self, sensor_id.name)
