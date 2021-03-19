@@ -10,7 +10,7 @@ class ForceSensor:
 
     def __repr__(self) -> str:
         """Clean representation of a force sensor state."""
-        return f'<ForceSensor name="{self.name}" force="{self.force}">'
+        return f'<ForceSensor name="{self.name}" force="{self.force:.2f}">'
 
     @property
     def name(self):
