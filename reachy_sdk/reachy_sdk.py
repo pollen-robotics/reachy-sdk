@@ -10,8 +10,10 @@ import grpc
 from google.protobuf.empty_pb2 import Empty
 
 from reachy_sdk_api import joint_pb2, joint_pb2_grpc
+from reachy_sdk_api import fan_pb2_grpc
 
 from .arm import LeftArm, RightArm
+from .fan import Fan
 from .joint import Joint
 from .trajectory.interpolation import InterpolationMode
 
@@ -23,9 +25,11 @@ class ReachySDK:
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
         self.joints: List[Joint] = []
+        self.fans: List[Fan] = []
 
         self._setup_joints()
         self._setup_arms()
+        self._setup_fans()
 
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
@@ -120,6 +124,14 @@ class ReachySDK:
             setattr(self, 'r_arm', right_arm)
         except ValueError:
             pass
+
+    def _setup_fans(self):
+        self._fans_stub = fan_pb2_grpc.FanControllerServiceStub(self._grpc_channel)
+        resp = self._fans_stub.GetAllFansId(Empty())
+        for name, uid in zip(resp.names, resp.uids):
+            fan = Fan(name, uid, stub=self._fans_stub)
+            setattr(self, name, fan)
+            self.fans.append(fan)
 
     async def _poll_waiting_commands(self):
         await asyncio.wait(
