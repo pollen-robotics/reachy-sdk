@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Setup config file."""
 
 from os import path
 

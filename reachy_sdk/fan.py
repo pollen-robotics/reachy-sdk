@@ -6,7 +6,7 @@ from reachy_sdk_api import fan_pb2, fan_pb2_grpc
 class Fan:
     """The Fan class and get/set state methods.
 
-    The Fan class is used to store the up-to-date state of the fan. 
+    The Fan class is used to store the up-to-date state of the fan.
     You can get its current state (check if they were automatically turned on by a temperature limit detection).
     You can also turn them on/off whenever you want.
     """

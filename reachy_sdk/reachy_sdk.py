@@ -1,3 +1,12 @@
+"""ReachySDK package.
+
+This package provides remote access (via socket) to a Reachy robot.
+It automatically handles the synchronization with the robot.
+In particular, you can easily get an always up-to-date robot state (joint positions, sensors value).
+You can also send joint commands, compute forward or inverse kinematics.
+
+"""
+
 import asyncio
 import threading
 import time
@@ -21,7 +30,18 @@ from .trajectory.interpolation import InterpolationMode
 
 
 class ReachySDK:
+    """The ReachySDK class handles the connection with your robot.
+
+    It holds:
+    - all joints (can be accessed directly via their name or via the joints list).
+    - all force sensors (can be accessed directly via their name or via the force_sensors list).
+    - all fans (can be accessed directly via their name or via the fans list).
+
+    The synchronisation with the robot is automatically launched at instanciation and is handled in background automatically.
+    """
+
     def __init__(self, host: str, sdk_port: int = 50055) -> None:
+        """Set up the connection with the robot."""
         self._host = host
         self._sdk_port = sdk_port
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
@@ -47,6 +67,18 @@ class ReachySDK:
         sampling_freq: float = 100,
         interpolation_mode: InterpolationMode = InterpolationMode.LINEAR,
     ):
+        """Send joints command to move the robot to a goal_positions within the specified duration.
+
+        This function will block until the movement is over. See goto_async for an asynchronous version.
+
+        The goal positions is expressed in joints coordinates. You can use as many joints target as you want.
+        The duration is expressed in seconds.
+        You can specify the starting_position, otherwise its current position is used,
+        for instance to start from its goal position and avoid bumpy start of move.
+        The sampling freq sets the frequency of intermediate goal positions commands.
+        You can also select an interpolation method use (linear or minimum jerk) which will influence directly the trajectory.
+
+        """
         def _wrapped_goto(pos):
             asyncio.run(
                 self.goto_async(
@@ -69,6 +101,19 @@ class ReachySDK:
         sampling_freq: float = 100,
         interpolation_mode: InterpolationMode = InterpolationMode.LINEAR,
     ):
+        """Send joints command to move the robot to a goal_positions within the specified duration.
+
+        This function is asynchronous and will return a Future. This can be used to easily combined multiple gotos.
+        See goto for an blocking version.
+
+        The goal positions is expressed in joints coordinates. You can use as many joints target as you want.
+        The duration is expressed in seconds.
+        You can specify the starting_position, otherwise its current position is used,
+        for instance to start from its goal position and avoid bumpy start of move.
+        The sampling freq sets the frequency of intermediate goal positions commands.
+        You can also select an interpolation method use (linear or minimum jerk) which will influence directly the trajectory.
+
+        """
         if starting_positions is None:
             starting_positions = {j: j.present_position for j in goal_positions.keys()}
 
