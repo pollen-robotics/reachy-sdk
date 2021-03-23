@@ -4,6 +4,7 @@ This module lets you access always up-to-date image from the camera.
 The synchronisation is done in background and only started when you need it.
 """
 
+from enum import Enum
 from typing import Optional
 import cv2 as cv
 import numpy as np
@@ -13,10 +14,20 @@ from threading import Event, Thread
 from reachy_sdk_api import camera_reachy_pb2, camera_reachy_pb2_grpc
 
 
+class ZoomLevel(Enum):
+    """The zoom level options."""
+
+    IN = camera_reachy_pb2.ZoomLevelCommand.IN
+    INTER = camera_reachy_pb2.ZoomLevelCommand.INTER
+    OUT = camera_reachy_pb2.ZoomLevelCommand.OUT
+
+
 class Camera:
     """The camera class."""
 
-    def __init__(self, side: str, stub: camera_reachy_pb2_grpc.CameraServiceStub) -> None:
+    def __init__(self,
+                 side: str, stub: camera_reachy_pb2_grpc.CameraServiceStub,
+                 ) -> None:
         """Set up the camera.
 
         The sync loop is only started the first time you try to access a frame.
@@ -46,6 +57,27 @@ class Camera:
         self._got_img.wait()
         self._got_img.clear()
         return self.last_frame
+
+    def zoom_homing(self):
+        """Run a homing to reset zoom position."""
+        ...
+
+
+    @property
+    def zoom_speed(self) -> int:
+        pass
+
+    @zoom_speed.setter
+    def zoom_speed(self, speed: int):
+        pass
+
+    @property
+    def zoom_level(self) -> ZoomLevel:
+        pass
+
+    @zoom_level.setter
+    def zoom_level(self, lvl: ZoomLevel):
+        pass
 
     def _start_sync_in_bg(self):
         def poll_img():
