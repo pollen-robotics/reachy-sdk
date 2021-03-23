@@ -17,7 +17,7 @@ def switch_side(side):
 
 
 def run():
-    """Main."""
+    """Run main loop."""
     options = [('grpc.max_send_message_length', 200000), ('grpc.max_receive_message_length', 200000)]
     side = 'right'
     host = 'localhost'
@@ -28,7 +28,7 @@ def run():
             response = stub.GetImage(ros_cam_pb2.Side(side=side))
             img = np.frombuffer(response.data, dtype=np.uint8)
             img = cv.imdecode(img, cv.IMREAD_COLOR)
-            cv.imshow('frame',img)
+            cv.imshow('frame', img)
             if cv.waitKey(1) & 0xFF == ord('s'):
                 side = switch_side(side)
 

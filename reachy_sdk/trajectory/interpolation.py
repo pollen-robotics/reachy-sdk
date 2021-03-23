@@ -1,3 +1,10 @@
+"""Trajectory interpolation utility module.
+
+Provides two main interpolation methods:
+- linear
+- minimum jerk
+"""
+
 from enum import Enum
 from typing import Callable, Optional
 
@@ -12,6 +19,7 @@ def linear(
     goal_position: np.ndarray,
     duration: float,
 ) -> InterpolationFunc:
+    """Compute the linear interpolation function from starting position to goal position."""
     def f(t: float) -> np.ndarray:
         return starting_position + (goal_position - starting_position) * t / duration
     return f
@@ -26,7 +34,7 @@ def minimum_jerk(
     final_velocity: Optional[np.ndarray] = None,
     final_acceleration: Optional[np.ndarray] = None,
 ) -> InterpolationFunc:
-
+    """Compute the mimimum jerk interpolation function from starting position to goal position."""
     if starting_velocity is None:
         starting_velocity = np.zeros(starting_position.shape)
     if starting_acceleration is None:
@@ -66,5 +74,7 @@ def minimum_jerk(
 
 
 class InterpolationMode(Enum):
+    """Inteprolation Mode enumeration."""
+
     LINEAR: Callable[[np.ndarray, np.ndarray, float], InterpolationFunc] = linear
     MINIMUM_JERK: Callable[[np.ndarray, np.ndarray, float], InterpolationFunc] = minimum_jerk
