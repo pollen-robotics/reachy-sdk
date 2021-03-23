@@ -1,8 +1,16 @@
+"""This module define the Force Sensor class."""
+
 from reachy_sdk_api.sensor_pb2 import ForceSensorState
 
 
 class ForceSensor:
+    """The Force sensor class.
+
+    The Force Sensor class is used to store the up-to-date force read by the sensor.
+    """
+
     def __init__(self, name: str, uid: int, state: ForceSensorState) -> None:
+        """Set up the force sensor."""
         self._name = name
         self._uid = uid
 

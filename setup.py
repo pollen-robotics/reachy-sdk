@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Setup config file."""
 
 from os import path
 
@@ -17,6 +18,7 @@ setup(
     packages=find_packages(exclude=['tests']),
 
     install_requires=[
+        'numpy',
         'reachy-sdk-api',
         'grpcio',
         'protobuf>3',

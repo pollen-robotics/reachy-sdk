@@ -1,3 +1,10 @@
+"""Reachy Arm module.
+
+Handles all specific method to an Arm (left and/or right) especially:
+- the forward kinematics
+- the inverse kinematics
+"""
+
 from abc import ABC
 from typing import List, Optional, Set
 
@@ -17,7 +24,15 @@ Matrix4x4 = kinematics__pb2.Matrix4x4
 
 
 class Arm(ABC):
+    """Arm abstract class used for both left/right arms.
+
+    It exposes the kinematics of the arm:
+    - you can access the joints actually used in the kinematic chain,
+    - you can compute the forward and inverse kinematics
+    """
+
     def __init__(self, joints: List[Joint], grpc_channel) -> None:
+        """Set up the arm with its kinematics."""
         self._kin_stub = ArmKinematicsStub(grpc_channel)
 
         self.joints = [j for j in joints if j.name in self._required_joints]
@@ -32,6 +47,11 @@ class Arm(ABC):
         ...
 
     def forward_kinematics(self, joints_position: Optional[List[float]] = None) -> np.ndarray:
+        """Compute the forward kinematics of the arm.
+
+        It will return the pose 4x4 matrix (as a numpy array) expressed in Reachy coordinate systems.
+        You can either specify a given joints position, otherwise it will use the current robot position.
+        """
         if joints_position is None:
             joints_position = [j.present_position for j in self.kinematics_chain]
 
@@ -58,6 +78,15 @@ class Arm(ABC):
         return np.array(resp.end_effector.pose.data).reshape((4, 4))
 
     def inverse_kinematics(self, target: np.ndarray, q0: Optional[List[float]] = None) -> List[float]:
+        """Compute the inverse kinematics of the arm.
+
+        Given a pose 4x4 target matrix (as a numpy array) expressed in Reachy coordinate systems,
+        it will try to compute a joint solution to reach this target (or get close).
+
+        It will raise a ValueError if no solution are found.
+
+        You can also specify a basic joint configuration as a prior for the solution.
+        """
         if target.shape != (4, 4):
             raise ValueError('target shape should be (4, 4) (got {target.shape} instead)!')
 
@@ -105,6 +134,13 @@ class Arm(ABC):
 
 
 class LeftArm(Arm):
+    """LeftArm class, all the work is actually done by the ABC Arm class.
+
+    It exposes the kinematics of the arm:
+    - you can access the joints actually used in the kinematic chain,
+    - you can compute the forward and inverse kinematics
+    """
+
     _side = 'left'
     _kinematics_chain = (
         'l_shoulder_pitch', 'l_shoulder_roll', 'l_arm_yaw',
@@ -120,6 +156,13 @@ class LeftArm(Arm):
 
 
 class RightArm(Arm):
+    """RightArm class, all the work is actually done by the ABC Arm class.
+
+    It exposes the kinematics of the arm:
+    - you can access the joints actually used in the kinematic chain,
+    - you can compute the forward and inverse kinematics
+    """
+
     _side = 'right'
     _kinematics_chain = (
         'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
