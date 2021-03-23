@@ -18,6 +18,7 @@ setup(
     packages=find_packages(exclude=['tests']),
 
     install_requires=[
+        'numpy',
         'reachy-sdk-api',
         'grpcio',
         'protobuf>3',
