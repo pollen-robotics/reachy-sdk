@@ -17,9 +17,10 @@ from reachy_sdk_api import camera_reachy_pb2, camera_reachy_pb2_grpc
 class ZoomLevel(Enum):
     """The zoom level options."""
 
-    IN = camera_reachy_pb2.ZoomLevelCommand.IN
-    INTER = camera_reachy_pb2.ZoomLevelCommand.INTER
-    OUT = camera_reachy_pb2.ZoomLevelCommand.OUT
+    ZERO = camera_reachy_pb2.ZoomLevelPossibilities.ZERO
+    IN = camera_reachy_pb2.ZoomLevelPossibilities.IN
+    INTER = camera_reachy_pb2.ZoomLevelPossibilities.INTER
+    OUT = camera_reachy_pb2.ZoomLevelPossibilities.OUT
 
 
 class Camera:
@@ -37,7 +38,10 @@ class Camera:
         self._got_img = Event()
         self._last_frame: Optional[np.ndarray] = None
 
-        self._camera = camera_reachy_pb2.Camera.LEFT if side == 'left' else camera_reachy_pb2.Camera.RIGHT
+        self._camera = camera_reachy_pb2.Camera(
+            id=camera_reachy_pb2.CameraId.LEFT if side == 'left' else camera_reachy_pb2.CameraId.RIGHT,
+        )
+
         self._stub = stub
 
     @property
@@ -58,26 +62,59 @@ class Camera:
         self._got_img.clear()
         return self.last_frame
 
-    def zoom_homing(self):
+    def zoom_homing(self) -> bool:
         """Run a homing to reset zoom position."""
-        ...
-
-
-    @property
-    def zoom_speed(self) -> int:
-        pass
-
-    @zoom_speed.setter
-    def zoom_speed(self, speed: int):
-        pass
+        resp = self._stub.SendZoomCommand(
+            camera_reachy_pb2.ZoomCommand(
+                camera=self._camera,
+                homing_command=camera_reachy_pb2.ZoomHoming(),
+            ),
+        )
+        return resp.success
 
     @property
     def zoom_level(self) -> ZoomLevel:
-        pass
+        """Get the current zoom level."""
+        resp = self._stub.GetZoomLevel(self._camera)
+        return ZoomLevel(resp.level)
 
     @zoom_level.setter
-    def zoom_level(self, lvl: ZoomLevel):
-        pass
+    def zoom_level(self, level: ZoomLevel):
+        if level == ZoomLevel.ZERO:
+            raise ValueError('Can not set zoom level to zero, use homing instead!')
+
+        resp = self._stub.SendZoomCommand(
+            camera_reachy_pb2.ZoomCommand(
+                camera=self._camera,
+                level_command=camera_reachy_pb2.ZoomLevel(
+                    level=level.value,
+                ),
+            ),
+        )
+        if not resp.success:
+            raise ValueError('Could not set new zoom level!')
+
+    @property
+    def zoom_speed(self) -> int:
+        """Get the current zoom speed."""
+        resp = self._stub.GetZoomSpeed(self._camera)
+        return resp.speed
+
+    @zoom_speed.setter
+    def zoom_speed(self, speed: int):
+        if not (4000 <= speed <= 40000):
+            raise ValueError('Speed should be within range (4000, 40000)!')
+
+        resp = self._stub.SendZoomCommand(
+            camera_reachy_pb2.ZoomCommand(
+                camera=self._camera,
+                speed_command=camera_reachy_pb2.ZoomSpeed(
+                    speed=speed,
+                ),
+            ),
+        )
+        if not resp.success:
+            raise ValueError('Could not set new zoom level!')
 
     def _start_sync_in_bg(self):
         def poll_img():

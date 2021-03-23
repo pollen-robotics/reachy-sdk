@@ -18,7 +18,7 @@ import numpy as np
 import grpc
 from google.protobuf.empty_pb2 import Empty
 
-from reachy_sdk_api import camera_reachy_pb2, camera_reachy_pb2_grpc
+from reachy_sdk_api import camera_reachy_pb2_grpc
 from reachy_sdk_api import joint_pb2, joint_pb2_grpc
 from reachy_sdk_api import fan_pb2_grpc
 from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
