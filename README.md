@@ -4,6 +4,9 @@ Reachy Python SDK is a pure python SDK library that let you control and interact
 
 This SDK is intended to work with the Reachy 2021 version.
 
+<img src="https://www.pollen-robotics.com/img/reachy/homepage_feature.png" width="400" alt="Reachy 2021 says hello!">
+
+
 It lets you get the current state of the robot (all joints position, the sensors up-to-date value, camera image) without having to think about synchronisation with the hardware.
 You can also send commands to control Reachy both in joint and cartesian spaces. You can control other effectors as well such as its fan or the camera zoom.
 
