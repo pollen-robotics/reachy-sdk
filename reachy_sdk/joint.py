@@ -1,122 +1,112 @@
+"""This module define the Joint class (any dynamixel motor or one of orbita's disk) and its registers."""
+
+import asyncio
+import threading
+from typing import Any, Dict, List
+
 import numpy as np
 
-from threading import Event
-from google.protobuf.wrappers_pb2 import BoolValue, FloatValue
+from google.protobuf.wrappers_pb2 import BoolValue, FloatValue, UInt32Value
 
-from reachy_sdk_api.joint_command_pb2 import JointCommand
+from reachy_sdk_api.joint_pb2 import JointId, JointState, JointCommand, PIDValue
+
+from .register import MetaRegister, Register
 
 
-class Joint:
-    def __init__(self, name: str, id: int,
-                 present_position: float, present_speed: float, present_load: float, temperature: float,
-                 goal_position: float, speed_limit: float, torque_limit: float,
-                 compliant: bool,
-                 # pid: (float, float, float),
-                 ) -> None:
-        self._name = name
-        self._id = id
+class Joint(metaclass=MetaRegister):
+    """The Joint class represents (any dynamixel motor or one of orbita's disk) and its registers.
 
-        self._fields = {
-            # TODO: Use metaclass instead (look at Django?)
-            'present_position': Field('present_position', present_position),
-            'present_speed': Field('present_speed', present_speed),
-            'present_load': Field('present_load', present_load),
-            'temperature': Field('temperature', temperature),
+    The Joint class is used to store the up-to-date state of the joint, especially the RO registers:
+        - its name and uid (resp. str and int) which will never change
+        - its current position (in degree)
+        - the current speed and load are presently not updated as the value given by the motor is unreliable
+        - its current temperature (in degree celsius)
 
-            'goal_position': Field('goal_position', goal_position, FloatValue),
-            'speed_limit': Field('speed_limit', speed_limit, FloatValue),
-            'torque_limit': Field('torque_limit', torque_limit, FloatValue),
-            'compliant': Field('compliant', compliant, BoolValue),
+    Similarly, when setting a new value to one of its RW register.
+    The Joint is responsible to inform the robot that some commands need to be sent.
+    The RW registers are:
+        - set the compliance on/off (boolean)
+        - goal position (in degree)
+        - speed limit (in degree per second)
+        - the torque limit (in %)
+        - its pid (refer to the different types of motor to have a better understanding of the gain expected range)
+    """
+
+    name = Register(readonly=True, type=str)
+    uid = Register(readonly=True, type=UInt32Value)
+
+    present_position = Register(readonly=True, type=FloatValue, conversion=(np.deg2rad, np.rad2deg))
+    present_speed = Register(readonly=True, type=FloatValue, conversion=(np.deg2rad, np.rad2deg))
+    present_load = Register(readonly=True, type=FloatValue)
+    temperature = Register(readonly=True, type=FloatValue)
+
+    compliant = Register(readonly=False, type=BoolValue)
+    goal_position = Register(readonly=False, type=FloatValue, conversion=(np.deg2rad, np.rad2deg))
+    speed_limit = Register(readonly=False, type=FloatValue, conversion=(np.deg2rad, np.rad2deg))
+    torque_limit = Register(readonly=False, type=FloatValue)
+
+    pid = Register(readonly=False, type=PIDValue)
+
+    def __init__(self, initial_state: JointState) -> None:
+        """Set up the joint with its initial state retrieved from the robot."""
+        self._state: Dict[str, Any] = {}
+        self._sync_lock = threading.Lock()
+
+        self._update_with(initial_state)
+
+    def __repr__(self):
+        """Clean representation of a joint basic state."""
+        mode = "compliant" if self.compliant else "stiff"
+        return f'<Joint name="{self.name}" pos="{self.present_position:.2f}" mode="{mode}">'
+
+    def registers(self):
+        """Return a dict[name, value] of all the Joint registers."""
+        return {
+            field: getattr(self, field)
+            for field in self._state.keys()
         }
 
-    @property
-    def name(self):
-        return self._name
+    def __getitem__(self, field: str) -> Any:
+        """Access a specific register of the Joint using the joint[register_name] notation."""
+        return self._state[field]
 
-    @property
-    def present_position(self):
-        return np.rad2deg(self._fields['present_position'].value)
+    def __setitem__(self, field: str, value: Any):
+        """Set a new value for a register of the Joint using the joint[register_name] = value notation."""
+        self._state[field] = value
 
-    @property
-    def present_speed(self):
-        return np.rad2deg(self._fields['present_speed'].value)
+        with self._sync_lock:
+            self._register_needing_sync.append(field)
+            self._need_sync.set()
 
-    @property
-    def present_load(self):
-        return self._fields['present_load'].value
+    def _setup_sync_loop(self):
+        """Set up the async synchronisation loop.
 
-    @property
-    def temperature(self):
-        return self._fields['temperature'].value
+        The setup is done separately, as the async Event should be created in the same EventLoop than it will be used.
 
-    @property
-    def goal_position(self):
-        return np.rad2deg(self._fields['goal_position'].value)
+        The _need_sync Event is used to inform the robot that some data need to be pushed to the real robot.
+        The _register_needing_sync stores a list of the register that need to be synced.
+        """
+        self._need_sync = asyncio.Event()
+        self._register_needing_sync: List[str] = []
 
-    @goal_position.setter
-    def goal_position(self, value):
-        self._fields['goal_position'].request_value_update(np.deg2rad(value))
+    def _update_with(self, new_state: JointState):
+        """Update the joint with a newly received (partial) state received from the gRPC server."""
+        for field, value in new_state.ListFields():
+            self._state[field.name] = value
 
-    @property
-    def speed_limit(self):
-        return np.rad2deg(self._fields['speed_limit'].value)
+    def _pop_command(self) -> JointCommand:
+        """Create a gRPC command from the registers that need to be synced."""
+        values = {
+            'id': JointId(uid=self.uid)
+        }
+        values.update({
+            reg: self._state[reg]
+            for reg in self._register_needing_sync
+        })
+        command = JointCommand(**values)
 
-    @speed_limit.setter
-    def speed_limit(self, value):
-        self._fields['speed_limit'].request_value_update(np.deg2rad(value))
+        with self._sync_lock:
+            self._register_needing_sync.clear()
+            self._need_sync.clear()
 
-    @property
-    def torque_limit(self):
-        return self._fields['torque_limit'].value
-
-    @torque_limit.setter
-    def torque_limit(self, value):
-        self._fields['torque_limit'].request_value_update(value)
-
-    @property
-    def compliant(self):
-        return self._fields['compliant'].value
-
-    @compliant.setter
-    def compliant(self, value):
-        if not value:
-            self.goal_position = self.present_position
-        self._fields['compliant'].request_value_update(value)
-
-    def _need_sync(self) -> bool:
-        for field in self._fields.values():
-            if field.sync_evt.is_set():
-                return True
-
-        return False
-
-    def _pop_sync_command(self) -> JointCommand:
-        args = {'id': self._id}
-
-        for name, field in self._fields.items():
-            if field.sync_evt.is_set():
-                args[name] = field.protobuf_value_type(value=field.value)
-                field.sync_evt.clear()
-
-        return JointCommand(**args)
-
-
-class Field:
-    def __init__(self, name, value, protobuf_value_type=None) -> None:
-        self.name = name
-        self.value = value
-        self.protobuf_value_type = protobuf_value_type
-
-        self.sync_evt = Event()
-
-    def __repr__(self) -> str:
-        return f'<"{camelCase(self.name)}"={self.value}>'
-
-    def request_value_update(self, value) -> None:
-        if value != self.value:
-            self.value = value
-            self.sync_evt.set()
-
-
-def camelCase(st):
-    return ''.join(x for x in st.title() if x.isalnum())
+        return command

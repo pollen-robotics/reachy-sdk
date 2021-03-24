@@ -1,277 +1,298 @@
-"""Reachy SDK."""
+"""ReachySDK package.
+
+This package provides remote access (via socket) to a Reachy robot.
+It automatically handles the synchronization with the robot.
+In particular, you can easily get an always up-to-date robot state (joint positions, sensors value).
+You can also send joint commands, compute forward or inverse kinematics.
+
+"""
+
+import asyncio
+import threading
 import time
-from typing import List
-import cv2 as cv
-from google.protobuf.wrappers_pb2 import FloatValue
+from concurrent.futures import ThreadPoolExecutor
+from typing import Dict, List, Optional
+
 import numpy as np
 
 import grpc
 from google.protobuf.empty_pb2 import Empty
 
-from reachy_sdk_api import joint_command_pb2_grpc,  joint_state_pb2_grpc, kinematics_pb2_grpc
-from reachy_sdk_api import camera_reachy_pb2_grpc, load_sensor_pb2_grpc
-from reachy_sdk_api import arm_kinematics_pb2_grpc, zoom_command_pb2_grpc
-from reachy_sdk_api import cartesian_command_pb2_grpc, orbita_kinematics_pb2_grpc
+from reachy_sdk_api import camera_reachy_pb2_grpc
+from reachy_sdk_api import joint_pb2, joint_pb2_grpc
+from reachy_sdk_api import fan_pb2_grpc
+from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
 
-from reachy_sdk_api.joint_state_pb2 import JointStateField, JointRequest, StreamAllJointsRequest
-from reachy_sdk_api.joint_command_pb2 import JointCommand, MultipleJointsCommand
-from reachy_sdk_api.camera_reachy_pb2 import Side as CamSide
-from reachy_sdk_api.load_sensor_pb2 import Side as LoadSide
-from reachy_sdk_api.arm_kinematics_pb2 import ArmEndEffector, ArmJointsPosition, ArmSide
-from reachy_sdk_api.kinematics_pb2 import JointsPosition, Matrix4x4
-from reachy_sdk_api.zoom_command_pb2 import ZoomCommand, ZoomSpeed
-from reachy_sdk_api.orbita_kinematics_pb2 import Point
-from reachy_sdk_api.cartesian_command_pb2 import FullBodyCartesianCommand
-from reachy_sdk_api.kinematics_pb2 import MinjerkRequest
-
+from .arm import LeftArm, RightArm
+from .camera import Camera
+from .fan import Fan
+from .force_sensor import ForceSensor
 from .joint import Joint
-
-
-side_to_proto = {'left': ArmSide.LEFT, 'right': ArmSide.RIGHT}
+from .trajectory.interpolation import InterpolationMode
 
 
 class ReachySDK:
-    def __init__(self, host: str = 'localhost', port: int = 50055, sync_freq: float = 100) -> None:
-        options = [('grpc.max_send_message_length', 200000), ('grpc.max_receive_message_length', 200000)]
-        self._channel = grpc.insecure_channel(f'{host}:{port}', options=options)
-        self._joint_state_stub = joint_state_pb2_grpc.JointStateServiceStub(self._channel)
-        self._joint_command_stub = joint_command_pb2_grpc.JointCommandServiceStub(self._channel)
-        self._load_sensor_stub = load_sensor_pb2_grpc.LoadServiceStub(self._channel)
-        self._camera_stub = camera_reachy_pb2_grpc.CameraServiceStub(self._channel)
-        self._arm_kinematics_stub = arm_kinematics_pb2_grpc.ArmKinematicStub(self._channel)
-        self._zoom_controller_stub = zoom_command_pb2_grpc.ZoomControllerServiceStub(self._channel)
-        self._orbita_stub = orbita_kinematics_pb2_grpc.OrbitaKinematicStub(self._channel)
-        self._cartesian_stub = cartesian_command_pb2_grpc.CartesianCommandServiceStub(self._channel)
-        self._kinematics_stub = kinematics_pb2_grpc.KinematicsServiceStub(self._channel)
+    """The ReachySDK class handles the connection with your robot.
+
+    It holds:
+    - all joints (can be accessed directly via their name or via the joints list).
+    - all force sensors (can be accessed directly via their name or via the force_sensors list).
+    - all fans (can be accessed directly via their name or via the fans list).
+
+    The synchronisation with the robot is automatically launched at instanciation and is handled in background automatically.
+    """
+
+    def __init__(self, host: str, sdk_port: int = 50055, camera_port: int = 50057) -> None:
+        """Set up the connection with the robot."""
+        self._host = host
+        self._sdk_port = sdk_port
+        self._camera_port = camera_port
+        self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
         self.joints: List[Joint] = []
-        self._get_initial_joint_state()
+        self.fans: List[Fan] = []
+        self.force_sensors: List[ForceSensor] = []
 
-        self._sync_freq = sync_freq
-        self._run_sync_loop_in_bg()
+        self._setup_joints()
+        self._setup_arms()
+        self._setup_fans()
+        self._setup_force_sensors()
+        self._setup_cameras()
 
-        self.left_image = None
-        self.right_image = None
+        self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
+        self._sync_thread.daemon = True
+        self._sync_thread.start()
 
-        self.left_load_sensor = 0
-        self.right_load_sensor = 0
+    def goto(
+        self,
+        goal_positions: Dict[Joint, float],
+        duration: float,
+        starting_positions: Optional[Dict[Joint, float]] = None,
+        sampling_freq: float = 100,
+        interpolation_mode: InterpolationMode = InterpolationMode.LINEAR,
+    ):
+        """Send joints command to move the robot to a goal_positions within the specified duration.
 
-    def _get_initial_joint_state(self) -> None:
-        self.joints.clear()
+        This function will block until the movement is over. See goto_async for an asynchronous version.
 
-        motor_names = self._joint_state_stub.GetAllJointNames(Empty())
+        The goal positions is expressed in joints coordinates. You can use as many joints target as you want.
+        The duration is expressed in seconds.
+        You can specify the starting_position, otherwise its current position is used,
+        for instance to start from its goal position and avoid bumpy start of move.
+        The sampling freq sets the frequency of intermediate goal positions commands.
+        You can also select an interpolation method use (linear or minimum jerk) which will influence directly the trajectory.
 
-        for id, name in enumerate(motor_names.names):
-            joint_state = self._joint_state_stub.GetJointState(JointRequest(
-                name=name, requested_fields=[JointStateField.ALL],
-            ))
-            j = Joint(
-                name=joint_state.name,
-                id=id,
-                present_position=joint_state.present_position.value,
-                present_speed=joint_state.present_speed.value,
-                present_load=joint_state.present_load.value,
-                temperature=joint_state.temperature.value,
-                goal_position=joint_state.goal_position.value,
-                speed_limit=joint_state.speed_limit.value,
-                torque_limit=joint_state.torque_limit.value,
-                compliant=joint_state.compliant.value,
-                # pid=joint_state.pid.value,
+        """
+        def _wrapped_goto(pos):
+            asyncio.run(
+                self.goto_async(
+                    goal_positions=goal_positions,
+                    duration=duration,
+                    starting_positions=starting_positions,
+                    sampling_freq=sampling_freq,
+                    interpolation_mode=interpolation_mode,
+                )
             )
-            setattr(self, name, j)
-            self.joints.append(j)
 
-    def _run_sync_loop_in_bg(self) -> None:
-        from threading import Thread
+        with ThreadPoolExecutor() as exec:
+            exec.submit(_wrapped_goto, -20)
 
-        t = []
-        t.append(Thread(target=self._get_position_updates))
-        t.append(Thread(target=self._get_temperature_updates))
-        t.append(Thread(target=self._get_load_sensor_updates))
-        # t.append(Thread(target=self._send_commands))
-        t.append(Thread(target=self._stream_commands))
-        t.append(Thread(target=self._get_image))
+    async def goto_async(
+        self,
+        goal_positions: Dict[Joint, float],
+        duration: float,
+        starting_positions: Optional[Dict[Joint, float]] = None,
+        sampling_freq: float = 100,
+        interpolation_mode: InterpolationMode = InterpolationMode.LINEAR,
+    ):
+        """Send joints command to move the robot to a goal_positions within the specified duration.
 
-        for tt in t:
-            tt.daemon = True
-            tt.start()
+        This function is asynchronous and will return a Future. This can be used to easily combined multiple gotos.
+        See goto for an blocking version.
 
-    def _get_position_updates(self) -> None:
-        req = StreamAllJointsRequest(
-            requested_fields=[JointStateField.PRESENT_POSITION],
-            publish_frequency=self._sync_freq,
+        The goal positions is expressed in joints coordinates. You can use as many joints target as you want.
+        The duration is expressed in seconds.
+        You can specify the starting_position, otherwise its current position is used,
+        for instance to start from its goal position and avoid bumpy start of move.
+        The sampling freq sets the frequency of intermediate goal positions commands.
+        You can also select an interpolation method use (linear or minimum jerk) which will influence directly the trajectory.
+
+        """
+        if starting_positions is None:
+            starting_positions = {j: j.present_position for j in goal_positions.keys()}
+
+        length = round(duration * sampling_freq)
+        if length < 1:
+            raise ValueError('Goto length too short! (incoherent duration {duration} or sampling_freq {sampling_freq})!')
+
+        joints = starting_positions.keys()
+        dt = 1 / sampling_freq
+
+        traj_func = interpolation_mode(
+            np.array(list(starting_positions.values())),
+            np.array(list(goal_positions.values())),
+            duration,
         )
 
-        for update in self._joint_state_stub.StreamAllJointsState(req):
-            for joint, joint_state in zip(self.joints, update.joints):
-                joint._fields['present_position'].value = joint_state.present_position.value
-
-    def _get_temperature_updates(self) -> None:
-        req = StreamAllJointsRequest(
-            requested_fields=[JointStateField.TEMPERATURE],
-            publish_frequency=0.1,
-        )
-        for update in self._joint_state_stub.StreamAllJointsState(req):
-            for joint, joint_state in zip(self.joints, update.joints):
-                joint._fields['temperature'].value = joint_state.temperature.value
-
-    def _get_load_sensor_updates(self) -> None:
+        t0 = time.time()
         while True:
-            self.left_load_sensor = self._load_sensor_stub.GetLoad(LoadSide(side='left')).load
-            self.right_load_sensor = self._load_sensor_stub.GetLoad(LoadSide(side='right')).load
+            elapsed_time = time.time() - t0
+            if elapsed_time > duration:
+                break
 
-    def _stream_commands(self) -> None:
-        def cmd_gen():
+            point = traj_func(elapsed_time)
+            for j, pos in zip(joints, point):
+                j.goal_position = pos
+
+            await asyncio.sleep(dt)
+
+    def _setup_joints(self):
+        joint_stub = joint_pb2_grpc.JointServiceStub(self._grpc_channel)
+
+        joint_ids = joint_stub.GetAllJointsId(Empty())
+        self._joint_uid_to_name = dict(zip(joint_ids.uids, joint_ids.names))
+        self._joint_name_to_uid = dict(zip(joint_ids.names, joint_ids.uids))
+
+        req = joint_pb2.JointsStateRequest(
+            ids=[joint_pb2.JointId(uid=uid) for uid in joint_ids.uids],
+            requested_fields=[joint_pb2.JointField.ALL],
+        )
+        joints_state = joint_stub.GetJointsState(req)
+
+        for joint_id, joint_state in zip(joints_state.ids, joints_state.states):
+            joint = Joint(joint_state)
+
+            self.joints.append(joint)
+            setattr(self, joint.name, joint)
+
+    def _setup_arms(self):
+        try:
+            left_arm = LeftArm(self.joints, self._grpc_channel)
+            setattr(self, 'l_arm', left_arm)
+        except ValueError:
+            pass
+
+        try:
+            right_arm = RightArm(self.joints, self._grpc_channel)
+            setattr(self, 'r_arm', right_arm)
+        except ValueError:
+            pass
+
+    def _setup_fans(self):
+        self._fans_stub = fan_pb2_grpc.FanControllerServiceStub(self._grpc_channel)
+        resp = self._fans_stub.GetAllFansId(Empty())
+        for name, uid in zip(resp.names, resp.uids):
+            fan = Fan(name, uid, stub=self._fans_stub)
+            setattr(self, name, fan)
+            self.fans.append(fan)
+
+    def _setup_force_sensors(self):
+        force_stub = sensor_pb2_grpc.SensorServiceStub(self._grpc_channel)
+        resp = force_stub.GetAllForceSensorsId(Empty())
+        names, uids = resp.names, resp.uids
+
+        resp = force_stub.GetSensorsState(
+            sensor_pb2.SensorsStateRequest(ids=[sensor_pb2.SensorId(uid=uid) for uid in uids]),
+        )
+        states = resp.states
+        for name, uid, state in zip(names, uids, states):
+            force_sensor = ForceSensor(name, uid, state.force_sensor_state)
+            setattr(self, name, force_sensor)
+            self.force_sensors.append(force_sensor)
+
+    def _setup_cameras(self):
+        try:
+            channel = grpc.insecure_channel(f'{self._host}:{self._camera_port}')
+            stub = camera_reachy_pb2_grpc.CameraServiceStub(channel)
+            self.left_camera = Camera(side='left', stub=stub)
+            self.right_camera = Camera(side='right', stub=stub)
+
+        except grpc.RpcError:
+            pass
+
+    async def _poll_waiting_commands(self):
+        await asyncio.wait(
+            [asyncio.create_task(joint._need_sync.wait()) for joint in self.joints],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        return joint_pb2.JointsCommand(
+            commands=[
+                joint._pop_command()
+                for joint in self.joints if joint._need_sync.is_set()
+            ],
+        )
+
+    def _start_sync_in_bg(self):
+        loop = asyncio.new_event_loop()
+        loop.run_until_complete(self._sync_loop())
+
+    async def _get_stream_update_loop(self, joint_stub, fields, freq: float):
+        stream_req = joint_pb2.StreamJointsRequest(
+            request=joint_pb2.JointsStateRequest(
+                ids=[joint_pb2.JointId(uid=joint.uid) for joint in self.joints],
+                requested_fields=fields,
+            ),
+            publish_frequency=freq,
+        )
+        async for state_update in joint_stub.StreamJointsState(stream_req):
+            for joint_id, state in zip(state_update.ids, state_update.states):
+                joint = self._get_joint_from_id(joint_id)
+                joint._update_with(state)
+
+    async def _get_stream_sensor_loop(self, async_channel, freq: float):
+        stub = sensor_pb2_grpc.SensorServiceStub(async_channel)
+        stream_req = sensor_pb2.StreamSensorsStateRequest(
+            request=sensor_pb2.SensorsStateRequest(
+                ids=[sensor_pb2.SensorId(uid=sensor.uid) for sensor in self.force_sensors],
+            ),
+            publish_frequency=freq,
+        )
+        async for state_update in stub.StreamSensorStates(stream_req):
+            for sensor_id, state in zip(state_update.ids, state_update.states):
+                sensor = self._get_sensor_from_id(sensor_id)
+                sensor._update_with(state.force_sensor_state)
+
+    async def _stream_commands_loop(self, joint_stub, freq: float):
+        async def command_poll():
+            last_pub = 0
+            dt = 1.0 / freq
+
             while True:
-                commands = self._waiting_commands()
-                if commands:
-                    yield MultipleJointsCommand(commands=commands)
-                time.sleep(1.0 / self._sync_freq)
+                elapsed_time = time.time() - last_pub
+                if elapsed_time < dt:
+                    await asyncio.sleep(dt - elapsed_time)
 
-        self._joint_command_stub.StreamJointsCommand(cmd_gen())
+                commands = await self._poll_waiting_commands()
+                yield commands
+                last_pub = time.time()
 
-    def _send_commands(self) -> None:
-        while True:
-            for cmd in self._waiting_commands():
-                self._joint_command_stub.SendCommand(cmd)
-            time.sleep(1.0 / self._sync_freq)
+        await joint_stub.StreamJointsCommands(command_poll())
 
-    def _waiting_commands(self) -> List[JointCommand]:
-        return [
-            joint._pop_sync_command()
-            for joint in self.joints if joint._need_sync()
-        ]
+    async def _sync_loop(self):
+        for joint in self.joints:
+            joint._setup_sync_loop()
 
-    def _get_image(self):
-        while True:
-            self.left_image = self._response_to_img(side='left')
-            self.right_image = self._response_to_img(side='right')
+        async_channel = grpc.aio.insecure_channel(f'{self._host}:{self._sdk_port}')
+        joint_stub = joint_pb2_grpc.JointServiceStub(async_channel)
 
-    def _response_to_img(self, side):
-        response = self._camera_stub.GetImage(CamSide(side=side))
-        img = np.frombuffer(response.data, dtype=np.uint8)
-        img = cv.imdecode(img, cv.IMREAD_COLOR)
-        return img
-
-    def forward_kinematics(self, arm_side, joints_positions):
-        '''Get from the sdk_server the forward kinematics for a given arm.
-
-        Args:
-            arm_side (str): required arm
-            joints_positions ([float]): list of the present_position of each joints.
-                len(joints_positions) should be equal to 7.
-
-        Returns:
-            :py:class:'~numpy.ndarray': 4x4 homogeneous matrix pose of the end effector
-        '''
-        joints = JointsPosition(positions=joints_positions)
-
-        req = ArmJointsPosition(
-            side=side_to_proto[arm_side],
-            positions=joints
-            )
-        response = self._arm_kinematics_stub.ComputeArmFK(req)
-        return np.array(response.target.data).reshape((4,4))
-
-    def inverse_kinematics(self, arm_side, target, q0):
-        '''Get from the sdk_server the inverse kinematics for a given arm.
-
-        Args:
-            arm_side (str): required arm
-            target (:py:class:`~numpy.ndarray`): 4*4 homogeneous matrix pose for the end effector
-            q0 ([float]): list containing the present_position of each motor joint. 
-                q0 is used to optimize the inverse kinematics computation time.
-
-        Returns:
-            [float]: list containing the goal_position of each motor joint to reach the target
-        '''
-        joints = JointsPosition(positions=q0)
-        target_proto = Matrix4x4(data=np.ndarray.flatten(target))
-
-        req = ArmEndEffector(
-            side=side_to_proto[arm_side],
-            target=target_proto,
-            q0=joints
-            )
-        response = self._arm_kinematics_stub.ComputeArmIK(req)
-        return response.positions.positions
-
-    def zoom_command(self, side, command):
-        '''Send command to Reachy's zoom.
-        
-        Args:
-            side (str): which camera to send the command to. ('right' or 'left')
-            command (str): type of command to send. ('homing', 'in', 'inter' or 'out')
-                'homing': the required zoom camera will perform homing. 
-                    Do it once before changing the zoom level.
-                'in': change zoom to see far objects
-                'out': change zoom to see close objects
-                'inter': zoom level between 'in' and 'out'
-        '''
-        req = ZoomCommand(
-            side=side,
-            command=command
-        )
-        self._zoom_controller_stub.SendZoomCommand(req)
-
-    def set_zoom_speed(self, speed):
-        '''Change the speed of zoom motors.
-        
-        Args:
-            speed (int): motors speed, must be between 4000 and 40000.
-        '''
-        self._zoom_controller_stub.SetZoomSpeed(ZoomSpeed(speed=speed))
-        
-    def look_at(self, x: float, y: float, z: float, duration: float):
-        '''Perform look_at on Orbita.
-
-        Args:
-            x, y, z (float): coordinates of the point to look_at in the robot frame
-        '''
-        quat = self._orbita_stub.GetQuaternionTransform(
-            Point(
-                x=x,
-                y=y,
-                z=z,
-            )
-        )
-        disks_goals = self._orbita_stub.ComputeOrbitaIK(
-            quat
-        ).sol.positions
-        disks = [self.neck_disk_top, self.neck_disk_middle, self.neck_disk_bottom]
-
-        trajs = np.transpose(
-            np.array(
-                [self._kinematics_stub.ComputeMinjerk(
-                    MinjerkRequest(
-                        present_position=FloatValue(value=np.deg2rad(d.present_position)),
-                        goal_position=FloatValue(value=g),
-                        duration=FloatValue(value=duration)
-                    )
-                ).positions for d,g in zip(disks,disks_goals)]
-            )
+        await asyncio.gather(
+            self._get_stream_update_loop(joint_stub, fields=[joint_pb2.JointField.PRESENT_POSITION], freq=100),
+            self._get_stream_update_loop(joint_stub, fields=[joint_pb2.JointField.TEMPERATURE], freq=0.1),
+            self._get_stream_sensor_loop(async_channel, freq=10),
+            self._stream_commands_loop(joint_stub, freq=100),
         )
 
-        ids = [18,19,20] # disks id in joint_state publisher list
+    def _get_joint_from_id(self, joint_id: joint_pb2.JointId) -> Joint:
+        if joint_id.HasField('uid'):
+            return getattr(self, self._joint_uid_to_name[joint_id.uid])
+        else:
+            return getattr(self, joint_id.name)
 
-        for i in range(len(trajs)):
-            cmd =  MultipleJointsCommand(
-                    commands=[
-                        JointCommand(id=id, goal_position=FloatValue(value=trajs[i][id-18]))
-                        for id in ids
-                    ]
-            )
-            self._joint_command_stub.SendAllJointsCommand(cmd)
-
-
-    @property
-    def head_stiff(self):
-        self.neck_disk_top.compliant = False
-        self.neck_disk_middle.compliant = False
-        self.neck_disk_bottom.compliant = False
-
-    @property
-    def head_compliant(self):
-        self.neck_disk_top.compliant = True
-        self.neck_disk_middle.compliant = True
-        self.neck_disk_bottom.compliant = True
+    def _get_sensor_from_id(self, sensor_id: sensor_pb2.SensorId) -> ForceSensor:
+        if sensor_id.HasField('uid'):
+            for sensor in self.force_sensors:
+                if sensor.uid == sensor_id.uid:
+                    return sensor
+            raise IndexError
+        else:
+            return getattr(self, sensor_id.name)
