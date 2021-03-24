@@ -83,10 +83,3 @@ This project adheres to the Contributor [code of conduct](CODE_OF_CONDUCT.md). B
 
 Visit [pollen-robotics.com](https://pollen-robotics.com) to learn more or visit [our forum](https://forum.pollen-robotics.com) if you have any questions.
 Follow [@PollenRobotics](https://twitter.com/pollenrobotics) on Twitter for important announcements.
-
-## Contributing
-
-
-Do not hesitate to share your experience with Pyluos and meet other Luos users on our forum!
-
-
