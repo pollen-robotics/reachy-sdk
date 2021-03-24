@@ -19,6 +19,7 @@ setup(
 
     install_requires=[
         'numpy',
+        'opencv-python',
         'reachy-sdk-api',
         'grpcio',
         'protobuf>3',

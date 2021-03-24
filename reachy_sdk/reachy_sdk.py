@@ -18,11 +18,13 @@ import numpy as np
 import grpc
 from google.protobuf.empty_pb2 import Empty
 
+from reachy_sdk_api import camera_reachy_pb2_grpc
 from reachy_sdk_api import joint_pb2, joint_pb2_grpc
 from reachy_sdk_api import fan_pb2_grpc
 from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
 
 from .arm import LeftArm, RightArm
+from .camera import Camera
 from .fan import Fan
 from .force_sensor import ForceSensor
 from .joint import Joint
@@ -40,10 +42,11 @@ class ReachySDK:
     The synchronisation with the robot is automatically launched at instanciation and is handled in background automatically.
     """
 
-    def __init__(self, host: str, sdk_port: int = 50055) -> None:
+    def __init__(self, host: str, sdk_port: int = 50055, camera_port: int = 50057) -> None:
         """Set up the connection with the robot."""
         self._host = host
         self._sdk_port = sdk_port
+        self._camera_port = camera_port
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
         self.joints: List[Joint] = []
@@ -54,6 +57,7 @@ class ReachySDK:
         self._setup_arms()
         self._setup_fans()
         self._setup_force_sensors()
+        self._setup_cameras()
 
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
@@ -187,8 +191,6 @@ class ReachySDK:
         resp = force_stub.GetAllForceSensorsId(Empty())
         names, uids = resp.names, resp.uids
 
-        print(sensor_pb2.SensorsStateRequest(ids=[sensor_pb2.SensorId(uid=uid) for uid in uids]))
-
         resp = force_stub.GetSensorsState(
             sensor_pb2.SensorsStateRequest(ids=[sensor_pb2.SensorId(uid=uid) for uid in uids]),
         )
@@ -197,6 +199,16 @@ class ReachySDK:
             force_sensor = ForceSensor(name, uid, state.force_sensor_state)
             setattr(self, name, force_sensor)
             self.force_sensors.append(force_sensor)
+
+    def _setup_cameras(self):
+        try:
+            channel = grpc.insecure_channel(f'{self._host}:{self._camera_port}')
+            stub = camera_reachy_pb2_grpc.CameraServiceStub(channel)
+            self.left_camera = Camera(side='left', stub=stub)
+            self.right_camera = Camera(side='right', stub=stub)
+
+        except grpc.RpcError:
+            pass
 
     async def _poll_waiting_commands(self):
         await asyncio.wait(
