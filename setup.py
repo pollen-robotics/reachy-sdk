@@ -26,7 +26,7 @@ setup(
     ],
 
     extras_require={
-        'doc': ['sphinx', 'sphinx-autoapi'],
+        'doc': ['sphinx'],
     },
 
     author='Pollen Robotics',
