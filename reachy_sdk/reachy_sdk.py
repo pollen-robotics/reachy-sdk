@@ -24,6 +24,7 @@ from .arm import LeftArm, RightArm
 from .camera import Camera
 from .fan import Fan
 from .force_sensor import ForceSensor
+from .head import Head
 from .joint import Joint
 
 
@@ -51,6 +52,7 @@ class ReachySDK:
 
         self._setup_joints()
         self._setup_arms()
+        self._setup_head()
         self._setup_fans()
         self._setup_force_sensors()
         self._setup_cameras()
@@ -87,6 +89,13 @@ class ReachySDK:
         try:
             right_arm = RightArm(self.joints, self._grpc_channel)
             setattr(self, 'r_arm', right_arm)
+        except ValueError:
+            pass
+
+    def _setup_head(self):
+        try:
+            head = Head(self.joints, self._grpc_channel)
+            setattr(self, 'head', head)
         except ValueError:
             pass
 
