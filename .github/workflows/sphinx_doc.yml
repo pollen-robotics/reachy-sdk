@@ -2,7 +2,7 @@ name: Build and deploy sphinx doc.
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   sphinx:
