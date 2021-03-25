@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Reachy Python SDK'
+project = 'Reachy SDK'
 copyright = '2021, Pollen Robotics'
 author = 'Pollen Robotics'
 
@@ -31,8 +31,7 @@ release = 'v1.0.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'autoapi.extension',
-    'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
 ]
 
@@ -57,4 +56,14 @@ html_theme = 'alabaster'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-autoapi_dirs = ['../reachy_sdk']
+autodoc_default_options = {
+    'members': True,
+    'inherited-members': True,
+}
+autodoc_typehints = 'description'
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+}
