@@ -63,6 +63,13 @@ class ReachySDK:
         self._sync_thread.daemon = True
         self._sync_thread.start()
 
+    def __repr__(self) -> str:
+        """Clean representation of a Reachy."""
+        s = '\n\t'.join([str(j) for j in self.joints])
+        return f'''<Reachy host="{self._host}" joints=\n\t{
+            s
+        }\n>'''
+
     def goto(
         self,
         goal_positions: Dict[Joint, float],
