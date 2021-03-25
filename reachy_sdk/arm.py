@@ -83,7 +83,7 @@ class Arm(ABC):
         Given a pose 4x4 target matrix (as a numpy array) expressed in Reachy coordinate systems,
         it will try to compute a joint solution to reach this target (or get close).
 
-        It will raise a ValueError if no solution are found.
+        It will raise a ValueError if no solution is found.
 
         You can also specify a basic joint configuration as a prior for the solution.
         """
