@@ -104,7 +104,7 @@ class Arm(ABC):
         }
 
         if q0 is not None:
-            req_params['q0'] = self._joint_position_from_pos(q0)
+            req_params['q0'] = self._joint_position_from_pos(np.deg2rad(q0))
 
         req = ArmIKRequest(**req_params)
         resp = self._kin_stub.ComputeArmIK(req)
