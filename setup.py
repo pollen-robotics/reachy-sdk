@@ -25,6 +25,10 @@ setup(
         'protobuf>3',
     ],
 
+    extras_require={
+        'doc': ['sphinx', 'sphinx-autoapi'],
+    },
+
     author='Pollen Robotics',
     author_email='contact@pollen-robotics.com',
     url='https://github.com/pollen-robotics/reachy-sdk',

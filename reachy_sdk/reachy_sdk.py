@@ -35,6 +35,7 @@ class ReachySDK:
     """The ReachySDK class handles the connection with your robot.
 
     It holds:
+
     - all joints (can be accessed directly via their name or via the joints list).
     - all force sensors (can be accessed directly via their name or via the force_sensors list).
     - all fans (can be accessed directly via their name or via the fans list).
