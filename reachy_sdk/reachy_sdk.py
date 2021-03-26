@@ -32,6 +32,7 @@ class ReachySDK:
     """The ReachySDK class handles the connection with your robot.
 
     It holds:
+
     - all joints (can be accessed directly via their name or via the joints list).
     - all force sensors (can be accessed directly via their name or via the force_sensors list).
     - all fans (can be accessed directly via their name or via the fans list).
@@ -60,6 +61,13 @@ class ReachySDK:
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
         self._sync_thread.start()
+
+    def __repr__(self) -> str:
+        """Clean representation of a Reachy."""
+        s = '\n\t'.join([str(j) for j in self.joints])
+        return f'''<Reachy host="{self._host}" joints=\n\t{
+            s
+        }\n>'''
 
     def _setup_joints(self):
         joint_stub = joint_pb2_grpc.JointServiceStub(self._grpc_channel)
