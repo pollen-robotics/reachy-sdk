@@ -10,10 +10,7 @@ You can also send joint commands, compute forward or inverse kinematics.
 import asyncio
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, List, Optional
-
-import numpy as np
+from typing import List
 
 import grpc
 from google.protobuf.empty_pb2 import Empty
@@ -27,8 +24,8 @@ from .arm import LeftArm, RightArm
 from .camera import Camera
 from .fan import Fan
 from .force_sensor import ForceSensor
+from .head import Head
 from .joint import Joint
-from .trajectory.interpolation import InterpolationMode
 
 
 class ReachySDK:
@@ -56,6 +53,7 @@ class ReachySDK:
 
         self._setup_joints()
         self._setup_arms()
+        self._setup_head()
         self._setup_fans()
         self._setup_force_sensors()
         self._setup_cameras()
@@ -70,89 +68,6 @@ class ReachySDK:
         return f'''<Reachy host="{self._host}" joints=\n\t{
             s
         }\n>'''
-
-    def goto(
-        self,
-        goal_positions: Dict[Joint, float],
-        duration: float,
-        starting_positions: Optional[Dict[Joint, float]] = None,
-        sampling_freq: float = 100,
-        interpolation_mode: InterpolationMode = InterpolationMode.LINEAR,
-    ):
-        """Send joints command to move the robot to a goal_positions within the specified duration.
-
-        This function will block until the movement is over. See goto_async for an asynchronous version.
-
-        The goal positions is expressed in joints coordinates. You can use as many joints target as you want.
-        The duration is expressed in seconds.
-        You can specify the starting_position, otherwise its current position is used,
-        for instance to start from its goal position and avoid bumpy start of move.
-        The sampling freq sets the frequency of intermediate goal positions commands.
-        You can also select an interpolation method use (linear or minimum jerk) which will influence directly the trajectory.
-
-        """
-        def _wrapped_goto(pos):
-            asyncio.run(
-                self.goto_async(
-                    goal_positions=goal_positions,
-                    duration=duration,
-                    starting_positions=starting_positions,
-                    sampling_freq=sampling_freq,
-                    interpolation_mode=interpolation_mode,
-                )
-            )
-
-        with ThreadPoolExecutor() as exec:
-            exec.submit(_wrapped_goto, -20)
-
-    async def goto_async(
-        self,
-        goal_positions: Dict[Joint, float],
-        duration: float,
-        starting_positions: Optional[Dict[Joint, float]] = None,
-        sampling_freq: float = 100,
-        interpolation_mode: InterpolationMode = InterpolationMode.LINEAR,
-    ):
-        """Send joints command to move the robot to a goal_positions within the specified duration.
-
-        This function is asynchronous and will return a Future. This can be used to easily combined multiple gotos.
-        See goto for an blocking version.
-
-        The goal positions is expressed in joints coordinates. You can use as many joints target as you want.
-        The duration is expressed in seconds.
-        You can specify the starting_position, otherwise its current position is used,
-        for instance to start from its goal position and avoid bumpy start of move.
-        The sampling freq sets the frequency of intermediate goal positions commands.
-        You can also select an interpolation method use (linear or minimum jerk) which will influence directly the trajectory.
-
-        """
-        if starting_positions is None:
-            starting_positions = {j: j.present_position for j in goal_positions.keys()}
-
-        length = round(duration * sampling_freq)
-        if length < 1:
-            raise ValueError('Goto length too short! (incoherent duration {duration} or sampling_freq {sampling_freq})!')
-
-        joints = starting_positions.keys()
-        dt = 1 / sampling_freq
-
-        traj_func = interpolation_mode(
-            np.array(list(starting_positions.values())),
-            np.array(list(goal_positions.values())),
-            duration,
-        )
-
-        t0 = time.time()
-        while True:
-            elapsed_time = time.time() - t0
-            if elapsed_time > duration:
-                break
-
-            point = traj_func(elapsed_time)
-            for j, pos in zip(joints, point):
-                j.goal_position = pos
-
-            await asyncio.sleep(dt)
 
     def _setup_joints(self):
         joint_stub = joint_pb2_grpc.JointServiceStub(self._grpc_channel)
@@ -169,7 +84,6 @@ class ReachySDK:
 
         for joint_id, joint_state in zip(joints_state.ids, joints_state.states):
             joint = Joint(joint_state)
-
             self.joints.append(joint)
             setattr(self, joint.name, joint)
 
@@ -183,6 +97,13 @@ class ReachySDK:
         try:
             right_arm = RightArm(self.joints, self._grpc_channel)
             setattr(self, 'r_arm', right_arm)
+        except ValueError:
+            pass
+
+    def _setup_head(self):
+        try:
+            head = Head(self.joints, self._grpc_channel)
+            setattr(self, 'head', head)
         except ValueError:
             pass
 
