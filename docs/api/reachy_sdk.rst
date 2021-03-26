@@ -21,6 +21,7 @@ Submodules
    camera.rst
    fan.rst
    force_sensor.rst
+   head.rst
    joint.rst
    register.rst
 
