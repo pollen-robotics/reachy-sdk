@@ -1,5 +1,7 @@
 """This module define the Fan class and method to get/set their state."""
 
+from typing import List
+
 from reachy_sdk_api import fan_pb2, fan_pb2_grpc
 
 
@@ -56,3 +58,12 @@ class Fan:
         if not resp.success:
             state = 'on' if self.is_on else 'off'
             raise IOError(f'Could not set fan "{self.name}" {state}!')
+
+class Fans:
+    def __init__(self, fans_list: List) -> None:
+        self.fans_list = fans_list
+        self._setup_fans(fans_list)
+
+    def _setup_fans(self, fans_list):
+        for f in fans_list:
+            setattr(self, f.name, f)
