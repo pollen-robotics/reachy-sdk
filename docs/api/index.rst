@@ -1,0 +1,2 @@
+.. toctree::
+   reachy_sdk

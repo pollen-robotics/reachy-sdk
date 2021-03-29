@@ -38,11 +38,16 @@ class Camera:
         self._got_img = Event()
         self._last_frame: Optional[np.ndarray] = None
 
+        self._side = side
         self._camera = camera_reachy_pb2.Camera(
             id=camera_reachy_pb2.CameraId.LEFT if side == 'left' else camera_reachy_pb2.CameraId.RIGHT,
         )
 
         self._stub = stub
+
+    def __repr__(self) -> str:
+        """Clean representation of a camera."""
+        return f'<Camera side="{self._side}" resolution={self.last_frame.shape}>'
 
     @property
     def last_frame(self) -> np.ndarray:
