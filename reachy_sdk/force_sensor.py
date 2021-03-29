@@ -1,5 +1,7 @@
 """This module define the Force Sensor class."""
 
+from typing import List
+
 from reachy_sdk_api.sensor_pb2 import ForceSensorState
 
 
@@ -37,3 +39,13 @@ class ForceSensor:
 
     def _update_with(self, state: ForceSensorState):
         self._force = state.force
+
+
+class ForceSensors:
+    def __init__(self, force_sensors_list: List) -> None:
+        self.force_sensors_list = force_sensors_list
+        self._setup_force_sensors(force_sensors_list)
+
+    def _setup_force_sensors(self, force_sensors_list):
+        for fs in force_sensors_list:
+            setattr(self, fs.name, fs)
