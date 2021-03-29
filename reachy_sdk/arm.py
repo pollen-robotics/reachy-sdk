@@ -15,6 +15,7 @@ from reachy_sdk_api.arm_kinematics_pb2 import ArmEndEffector, ArmFKRequest, ArmI
 from reachy_sdk_api.kinematics_pb2 import joint__pb2
 from reachy_sdk_api.arm_kinematics_pb2 import kinematics__pb2
 
+from .device_holder import DeviceHolder
 from .joint import Joint
 
 # Circumvent https://github.com/grpc/grpc/issues/18139
@@ -35,26 +36,24 @@ class Arm(ABC):
         """Set up the arm with its kinematics."""
         self._kin_stub = ArmKinematicsStub(grpc_channel)
 
-        # self.joints = [j for j in joints if j.name in self._required_joints]
-        self.joints = {j.name: j for j in joints if j.name in self._required_joints}
-
-        if len(self.joints) != len(self._required_joints):
+        found_joints = [j for j in joints if j.name in self._required_joints]
+        if len(found_joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
-        self._setup_joints(joints)
+        self.joints = DeviceHolder(found_joints)
+        self._setup_joints(found_joints)
 
-        self.kinematics_chain = [j for j in self.joints.values() if j.name in self._kinematics_chain]
+        self.kinematics_chain = DeviceHolder([j for j in found_joints if j.name in self._kinematics_chain])
 
     def __repr__(self) -> str:
         """Clean representation of an arm state."""
-        s = '\n\t'.join([str(j) for j in self.joints.values()])
-        return f'<Arm side="{self._side}" joints=\n\t{s}\n>'
+        return f'<Arm side="{self._side}" joints={self.joints}\n>'
 
     @property
     def _side(self) -> str:
         ...
 
-    def _setup_joints(self, joints) -> None:
+    def _setup_joints(self, joints: List[Joint]) -> None:
         for j in joints:
             if j.name in self._required_joints:
                 setattr(self, j.name, j)
@@ -66,7 +65,7 @@ class Arm(ABC):
         You can either specify a given joints position, otherwise it will use the current robot position.
         """
         if joints_position is None:
-            joints_position = [j.present_position for j in self.kinematics_chain]
+            joints_position = [j.present_position for j in self.kinematics_chain.values()]
 
         if isinstance(joints_position, np.ndarray) and len(joints_position.shape) > 1:
             raise ValueError('Vectorized kinematics not supported!')
@@ -141,7 +140,7 @@ class Arm(ABC):
 
     def _joint_position_from_pos(self, joints_position: List[float]) -> ArmJointPosition:
         return JointPosition(
-            ids=[JointId(uid=j.uid) for j in self.kinematics_chain],
+            ids=[JointId(uid=j.uid) for j in self.kinematics_chain.values()],
             positions=joints_position,
         )
 

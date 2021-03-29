@@ -10,7 +10,7 @@ You can also send joint commands, compute forward or inverse kinematics.
 import asyncio
 import threading
 import time
-from typing import List, Dict
+from typing import List
 from enum import Enum
 
 import grpc
@@ -23,8 +23,9 @@ from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
 
 from .arm import LeftArm, RightArm
 from .camera import Camera
-from .fan import Fan, Fans
-from .force_sensor import ForceSensor, ForceSensors
+from .device_holder import DeviceHolder
+from .fan import Fan
+from .force_sensor import ForceSensor
 from .head import Head
 from .joint import Joint
 
@@ -57,9 +58,9 @@ class ReachySDK:
         self._camera_port = camera_port
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
-        self.joints: Dict[str, Joint] = {}
-        self._fans_list: List[Fan] = []
-        self._force_sensors_list: List[ForceSensor] = []
+        self._joints: List[Joint] = []
+        self._fans: List[Fan] = []
+        self._force_sensors: List[ForceSensor] = []
 
         self._parts = ReachyParts
 
@@ -70,8 +71,9 @@ class ReachySDK:
         self._setup_force_sensors()
         self._setup_cameras()
 
-        self.fans = Fans(self._fans_list)
-        self.force_sensors = ForceSensors(self._force_sensors_list)
+        self.fans = DeviceHolder(self._fans)
+        self.force_sensors = DeviceHolder(self._force_sensors)
+        self.joints = DeviceHolder(self._joints)
 
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
@@ -79,7 +81,7 @@ class ReachySDK:
 
     def __repr__(self) -> str:
         """Clean representation of a Reachy."""
-        s = '\n\t'.join([str(j) for j in self.joints.values()])
+        s = '\n\t'.join([str(j) for j in self._joints])
         return f'''<Reachy host="{self._host}" joints=\n\t{
             s
         }\n>'''
@@ -99,25 +101,24 @@ class ReachySDK:
 
         for joint_id, joint_state in zip(joints_state.ids, joints_state.states):
             joint = Joint(joint_state)
-            self.joints[joint.name] = joint
-            # self.joints.append(joint)
+            self._joints.append(joint)
 
     def _setup_arms(self):
         try:
-            left_arm = LeftArm(self.joints.values(), self._grpc_channel)
+            left_arm = LeftArm(self._joints, self._grpc_channel)
             setattr(self, 'l_arm', left_arm)
         except ValueError:
             pass
 
         try:
-            right_arm = RightArm(self.joints.values(), self._grpc_channel)
+            right_arm = RightArm(self._joints, self._grpc_channel)
             setattr(self, 'r_arm', right_arm)
         except ValueError:
             pass
 
     def _setup_head(self):
         try:
-            head = Head(self.joints.values(), self._grpc_channel)
+            head = Head(self._joints, self._grpc_channel)
             setattr(self, 'head', head)
         except ValueError:
             pass
@@ -127,7 +128,7 @@ class ReachySDK:
         resp = self._fans_stub.GetAllFansId(Empty())
         for name, uid in zip(resp.names, resp.uids):
             fan = Fan(name, uid, stub=self._fans_stub)
-            self._fans_list.append(fan)
+            self._fans.append(fan)
 
     def _setup_force_sensors(self):
         force_stub = sensor_pb2_grpc.SensorServiceStub(self._grpc_channel)
@@ -140,7 +141,7 @@ class ReachySDK:
         states = resp.states
         for name, uid, state in zip(names, uids, states):
             force_sensor = ForceSensor(name, uid, state.force_sensor_state)
-            self._force_sensors_list.append(force_sensor)
+            self._force_sensors.append(force_sensor)
 
     def _setup_cameras(self):
         try:
@@ -154,13 +155,13 @@ class ReachySDK:
 
     async def _poll_waiting_commands(self):
         await asyncio.wait(
-            [asyncio.create_task(joint._need_sync.wait()) for joint in self.joints.values()],
+            [asyncio.create_task(joint._need_sync.wait()) for joint in self._joints],
             return_when=asyncio.FIRST_COMPLETED,
         )
         return joint_pb2.JointsCommand(
             commands=[
                 joint._pop_command()
-                for joint in self.joints.values() if joint._need_sync.is_set()
+                for joint in self._joints if joint._need_sync.is_set()
             ],
         )
 
@@ -171,27 +172,27 @@ class ReachySDK:
     async def _get_stream_update_loop(self, joint_stub, fields, freq: float):
         stream_req = joint_pb2.StreamJointsRequest(
             request=joint_pb2.JointsStateRequest(
-                ids=[joint_pb2.JointId(uid=joint.uid) for joint in self.joints.values()],
+                ids=[joint_pb2.JointId(uid=joint.uid) for joint in self._joints],
                 requested_fields=fields,
             ),
             publish_frequency=freq,
         )
         async for state_update in joint_stub.StreamJointsState(stream_req):
             for joint_id, state in zip(state_update.ids, state_update.states):
-                joint = self._get_joint_from_id(joint_id)
+                joint = self.joints._get_device_from_id(joint_id)
                 joint._update_with(state)
 
     async def _get_stream_sensor_loop(self, async_channel, freq: float):
         stub = sensor_pb2_grpc.SensorServiceStub(async_channel)
         stream_req = sensor_pb2.StreamSensorsStateRequest(
             request=sensor_pb2.SensorsStateRequest(
-                ids=[sensor_pb2.SensorId(uid=sensor.uid) for sensor in self._force_sensors_list],
+                ids=[sensor_pb2.SensorId(uid=sensor.uid) for sensor in self._force_sensors],
             ),
             publish_frequency=freq,
         )
         async for state_update in stub.StreamSensorStates(stream_req):
             for sensor_id, state in zip(state_update.ids, state_update.states):
-                sensor = self._get_sensor_from_id(sensor_id)
+                sensor = self.force_sensors._get_device_from_id(sensor_id)
                 sensor._update_with(state.force_sensor_state)
 
     async def _stream_commands_loop(self, joint_stub, freq: float):
@@ -211,7 +212,7 @@ class ReachySDK:
         await joint_stub.StreamJointsCommands(command_poll())
 
     async def _sync_loop(self):
-        for joint in self.joints.values():
+        for joint in self._joints:
             joint._setup_sync_loop()
 
         async_channel = grpc.aio.insecure_channel(f'{self._host}:{self._sdk_port}')
@@ -223,22 +224,6 @@ class ReachySDK:
             self._get_stream_sensor_loop(async_channel, freq=10),
             self._stream_commands_loop(joint_stub, freq=100),
         )
-
-    def _get_joint_from_id(self, joint_id: joint_pb2.JointId) -> Joint:
-        if joint_id.HasField('uid'):
-            joint_name = self._joint_uid_to_name[joint_id.uid]
-            return [j for j in self.joints.values() if j.name == joint_name][0]
-        else:
-            return [j for j in self.joints.values() if j.name == joint_id.name][0]
-
-    def _get_sensor_from_id(self, sensor_id: sensor_pb2.SensorId) -> ForceSensor:
-        if sensor_id.HasField('uid'):
-            for sensor in self._force_sensors_list:
-                if sensor.uid == sensor_id.uid:
-                    return sensor
-            raise IndexError
-        else:
-            return getattr(self, sensor_id.name)
 
     def turn_on(self, part):
         """Turn the joints of the given Reachy's part stiff.
@@ -258,7 +243,7 @@ class ReachySDK:
                 print(f'This reachy has no {part}!')
                 return
 
-        for joint in req_part.joints.values():
+        for joint in req_part._joints:
             joint.compliant = False
 
     def turn_off(self, part):
@@ -280,5 +265,5 @@ class ReachySDK:
                 print(f'This reachy has no {part}!')
                 return
 
-        for joint in req_part.joints.values():
+        for joint in req_part._joints:
             joint.compliant = True
