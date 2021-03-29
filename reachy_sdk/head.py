@@ -41,6 +41,10 @@ class Head:
 
         self._stub = OrbitaKinematicsStub(grpc_channel)
 
+    def __repr__(self) -> str:
+        """Clean representation of all the joints in the class."""
+        return '\n'.join([str(j) for j in self.joints])
+
     @property
     def disks(self):
         """Return the three orbita disks. The inverse kinematics will always return the disk position in the same order."""

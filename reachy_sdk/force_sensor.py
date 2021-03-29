@@ -52,6 +52,10 @@ class ForceSensors:
         self.force_sensors_list = force_sensors_list
         self._setup_force_sensors(force_sensors_list)
 
+    def __repr__(self) -> str:
+        """Clean representation of all the force sensors in the class."""
+        return '\n'.join([str(f) for f in self.force_sensors_list])
+
     def _setup_force_sensors(self, force_sensors_list):
         for fs in force_sensors_list:
             setattr(self, fs.name, fs)

@@ -71,6 +71,10 @@ class Fans:
         self.fans_list = fans_list
         self._setup_fans(fans_list)
 
+    def __repr__(self) -> str:
+        """Clean representation of all the fans in the class."""
+        return '\n'.join([str(f) for f in self.fans_list])
+
     def _setup_fans(self, fans_list):
         for f in fans_list:
             setattr(self, f.name, f)
