@@ -62,8 +62,9 @@ class Fan:
 
 class Fans:
     """Fans class.
-    
-    Contains each given Fan."""
+
+    Contains each given Fan.
+    """
 
     def __init__(self, fans_list: List) -> None:
         """Set up fans, each given fan is an attribute of the class."""
