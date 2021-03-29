@@ -11,6 +11,7 @@ import asyncio
 import threading
 import time
 from typing import List
+from enum import Enum
 
 import grpc
 from google.protobuf.empty_pb2 import Empty
@@ -22,10 +23,18 @@ from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
 
 from .arm import LeftArm, RightArm
 from .camera import Camera
-from .fan import Fan
-from .force_sensor import ForceSensor
+from .fan import Fan, Fans
+from .force_sensor import ForceSensor, ForceSensors
 from .head import Head
 from .joint import Joint
+
+
+class ReachyParts(Enum):
+    """Reachy parts options."""
+    REACHY = 1
+    L_ARM = 2
+    R_ARM = 3
+    HEAD = 4
 
 
 class ReachySDK:
@@ -48,8 +57,10 @@ class ReachySDK:
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
         self.joints: List[Joint] = []
-        self.fans: List[Fan] = []
-        self.force_sensors: List[ForceSensor] = []
+        self._fans_list: List[Fan] = []
+        self._force_sensors_list: List[ForceSensor] = []
+
+        self._parts = ReachyParts   
 
         self._setup_joints()
         self._setup_arms()
@@ -57,6 +68,9 @@ class ReachySDK:
         self._setup_fans()
         self._setup_force_sensors()
         self._setup_cameras()
+
+        self.fans = Fans(self._fans_list)
+        self.force_sensors = ForceSensors(self._force_sensors_list)
 
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
@@ -85,7 +99,6 @@ class ReachySDK:
         for joint_id, joint_state in zip(joints_state.ids, joints_state.states):
             joint = Joint(joint_state)
             self.joints.append(joint)
-            setattr(self, joint.name, joint)
 
     def _setup_arms(self):
         try:
@@ -112,8 +125,7 @@ class ReachySDK:
         resp = self._fans_stub.GetAllFansId(Empty())
         for name, uid in zip(resp.names, resp.uids):
             fan = Fan(name, uid, stub=self._fans_stub)
-            setattr(self, name, fan)
-            self.fans.append(fan)
+            self._fans_list.append(fan)
 
     def _setup_force_sensors(self):
         force_stub = sensor_pb2_grpc.SensorServiceStub(self._grpc_channel)
@@ -126,8 +138,7 @@ class ReachySDK:
         states = resp.states
         for name, uid, state in zip(names, uids, states):
             force_sensor = ForceSensor(name, uid, state.force_sensor_state)
-            setattr(self, name, force_sensor)
-            self.force_sensors.append(force_sensor)
+            self._force_sensors_list.append(force_sensor)
 
     def _setup_cameras(self):
         try:
@@ -172,7 +183,7 @@ class ReachySDK:
         stub = sensor_pb2_grpc.SensorServiceStub(async_channel)
         stream_req = sensor_pb2.StreamSensorsStateRequest(
             request=sensor_pb2.SensorsStateRequest(
-                ids=[sensor_pb2.SensorId(uid=sensor.uid) for sensor in self.force_sensors],
+                ids=[sensor_pb2.SensorId(uid=sensor.uid) for sensor in self._force_sensors_list],
             ),
             publish_frequency=freq,
         )
@@ -213,15 +224,50 @@ class ReachySDK:
 
     def _get_joint_from_id(self, joint_id: joint_pb2.JointId) -> Joint:
         if joint_id.HasField('uid'):
-            return getattr(self, self._joint_uid_to_name[joint_id.uid])
+            joint_name = self._joint_uid_to_name[joint_id.uid]
+            return [j for j in self.joints if j.name == joint_name][0]
         else:
-            return getattr(self, joint_id.name)
+            return [j for j in self.joints if j.name == joint_id.name][0]
 
     def _get_sensor_from_id(self, sensor_id: sensor_pb2.SensorId) -> ForceSensor:
         if sensor_id.HasField('uid'):
-            for sensor in self.force_sensors:
+            for sensor in self._force_sensors_list:
                 if sensor.uid == sensor_id.uid:
                     return sensor
             raise IndexError
         else:
             return getattr(self, sensor_id.name)
+
+    def turn_on(self, part):
+        if part not in [p.name.lower() for p in self._parts]:
+            print("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
+
+        if part == 'reachy':
+            req_part = self
+        else:
+            try:
+                req_part = getattr(self, part)
+            except AttributeError:
+                print(f'This reachy has no {part}!')
+                return
+
+        for joint in req_part.joints:
+            joint.compliant = False
+
+
+    def turn_off(self, part):
+        if part not in [p.name.lower() for p in self._parts]:
+            print("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
+            return
+
+        if part == 'reachy':
+            req_part = self
+        else:
+            try:
+                req_part = getattr(self, part)
+            except AttributeError:
+                print(f'This reachy has no {part}!')
+                return
+
+        for joint in req_part.joints:
+            joint.compliant = True
