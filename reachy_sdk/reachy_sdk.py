@@ -243,7 +243,7 @@ class ReachySDK:
         The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
         Having part = 'reachy' corresponds to turning all avaible joints stiff.
         """
-        self._change_compliancy(part, compliant=True)
+        self._change_compliancy(part, compliant=False)
 
     def turn_off(self, part):
         """Turn the joints of the given Reachy's part compliant.
@@ -251,4 +251,4 @@ class ReachySDK:
         The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
         Having part = 'reachy' corresponds to turning all avaible joints compliant.
         """
-        self._change_compliancy(part, compliant=False)
+        self._change_compliancy(part, compliant=True)
