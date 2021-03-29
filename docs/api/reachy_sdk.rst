@@ -19,6 +19,7 @@ Submodules
 
    arm.rst
    camera.rst
+   device_holder.rst
    fan.rst
    force_sensor.rst
    head.rst
