@@ -258,7 +258,7 @@ class ReachySDK:
                 print(f'This reachy has no {part}!')
                 return
 
-        for joint in req_part.joints:
+        for joint in req_part.joints.values():
             joint.compliant = False
 
     def turn_off(self, part):
@@ -280,5 +280,5 @@ class ReachySDK:
                 print(f'This reachy has no {part}!')
                 return
 
-        for joint in req_part.joints:
+        for joint in req_part.joints.values():
             joint.compliant = True
