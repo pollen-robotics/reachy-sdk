@@ -225,26 +225,25 @@ class ReachySDK:
             self._stream_commands_loop(joint_stub, freq=100),
         )
 
+    def _change_compliancy(self, part, compliant: bool):
+        if part not in [p.name.lower() for p in self._parts]:
+            raise ValueError("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
+
+        if part == 'reachy':
+            req_part = self
+        else:
+            req_part = getattr(self, part)
+
+        for joint in req_part.joints.values():
+            joint.compliant = compliant
+
     def turn_on(self, part):
         """Turn the joints of the given Reachy's part stiff.
 
         The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
         Having part = 'reachy' corresponds to turning all avaible joints stiff.
         """
-        if part not in [p.name.lower() for p in self._parts]:
-            print("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
-
-        if part == 'reachy':
-            req_part = self
-        else:
-            try:
-                req_part = getattr(self, part)
-            except AttributeError:
-                print(f'This reachy has no {part}!')
-                return
-
-        for joint in req_part._joints:
-            joint.compliant = False
+        self._change_compliancy(part, compliant=True)
 
     def turn_off(self, part):
         """Turn the joints of the given Reachy's part compliant.
@@ -252,18 +251,4 @@ class ReachySDK:
         The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
         Having part = 'reachy' corresponds to turning all avaible joints compliant.
         """
-        if part not in [p.name.lower() for p in self._parts]:
-            print("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
-            return
-
-        if part == 'reachy':
-            req_part = self
-        else:
-            try:
-                req_part = getattr(self, part)
-            except AttributeError:
-                print(f'This reachy has no {part}!')
-                return
-
-        for joint in req_part._joints:
-            joint.compliant = True
+        self._change_compliancy(part, compliant=False)
