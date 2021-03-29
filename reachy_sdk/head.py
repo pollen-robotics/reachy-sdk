@@ -32,7 +32,8 @@ class Head:
 
     def __init__(self, joints: List[Joint], grpc_channel) -> None:
         """Set up the head with its kinematics."""
-        self.joints = [j for j in joints if j.name in self._required_joints]
+        self.joints = {j.name: j for j in joints if j.name in self._required_joints}
+        # self.joints = [j for j in joints if j.name in self._required_joints]
 
         if len(self.joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')

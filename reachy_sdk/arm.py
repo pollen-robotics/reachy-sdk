@@ -35,14 +35,15 @@ class Arm(ABC):
         """Set up the arm with its kinematics."""
         self._kin_stub = ArmKinematicsStub(grpc_channel)
 
-        self.joints = [j for j in joints if j.name in self._required_joints]
+        # self.joints = [j for j in joints if j.name in self._required_joints]
+        self.joints = {j.name: j for j in joints if j.name in self._required_joints}
 
         if len(self.joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
         self._setup_joints(joints)
 
-        self.kinematics_chain = [j for j in self.joints if j.name in self._kinematics_chain]
+        self.kinematics_chain = [j for j in self.joints.values() if j.name in self._kinematics_chain]
 
     def __repr__(self) -> str:
         """Clean representation of an arm state."""

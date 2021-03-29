@@ -10,7 +10,7 @@ You can also send joint commands, compute forward or inverse kinematics.
 import asyncio
 import threading
 import time
-from typing import List
+from typing import List, Dict
 from enum import Enum
 
 import grpc
@@ -57,7 +57,7 @@ class ReachySDK:
         self._camera_port = camera_port
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
-        self.joints: List[Joint] = []
+        self.joints: Dict[str, Joint] = {}
         self._fans_list: List[Fan] = []
         self._force_sensors_list: List[ForceSensor] = []
 
@@ -79,7 +79,7 @@ class ReachySDK:
 
     def __repr__(self) -> str:
         """Clean representation of a Reachy."""
-        s = '\n\t'.join([str(j) for j in self.joints])
+        s = '\n\t'.join([str(j) for j in self.joints.values()])
         return f'''<Reachy host="{self._host}" joints=\n\t{
             s
         }\n>'''
@@ -99,24 +99,25 @@ class ReachySDK:
 
         for joint_id, joint_state in zip(joints_state.ids, joints_state.states):
             joint = Joint(joint_state)
-            self.joints.append(joint)
+            self.joints[joint.name] = joint
+            # self.joints.append(joint)
 
     def _setup_arms(self):
         try:
-            left_arm = LeftArm(self.joints, self._grpc_channel)
+            left_arm = LeftArm(self.joints.values(), self._grpc_channel)
             setattr(self, 'l_arm', left_arm)
         except ValueError:
             pass
 
         try:
-            right_arm = RightArm(self.joints, self._grpc_channel)
+            right_arm = RightArm(self.joints.values(), self._grpc_channel)
             setattr(self, 'r_arm', right_arm)
         except ValueError:
             pass
 
     def _setup_head(self):
         try:
-            head = Head(self.joints, self._grpc_channel)
+            head = Head(self.joints.values(), self._grpc_channel)
             setattr(self, 'head', head)
         except ValueError:
             pass
@@ -153,13 +154,13 @@ class ReachySDK:
 
     async def _poll_waiting_commands(self):
         await asyncio.wait(
-            [asyncio.create_task(joint._need_sync.wait()) for joint in self.joints],
+            [asyncio.create_task(joint._need_sync.wait()) for joint in self.joints.values()],
             return_when=asyncio.FIRST_COMPLETED,
         )
         return joint_pb2.JointsCommand(
             commands=[
                 joint._pop_command()
-                for joint in self.joints if joint._need_sync.is_set()
+                for joint in self.joints.values() if joint._need_sync.is_set()
             ],
         )
 
@@ -170,7 +171,7 @@ class ReachySDK:
     async def _get_stream_update_loop(self, joint_stub, fields, freq: float):
         stream_req = joint_pb2.StreamJointsRequest(
             request=joint_pb2.JointsStateRequest(
-                ids=[joint_pb2.JointId(uid=joint.uid) for joint in self.joints],
+                ids=[joint_pb2.JointId(uid=joint.uid) for joint in self.joints.values()],
                 requested_fields=fields,
             ),
             publish_frequency=freq,
@@ -210,7 +211,7 @@ class ReachySDK:
         await joint_stub.StreamJointsCommands(command_poll())
 
     async def _sync_loop(self):
-        for joint in self.joints:
+        for joint in self.joints.values():
             joint._setup_sync_loop()
 
         async_channel = grpc.aio.insecure_channel(f'{self._host}:{self._sdk_port}')
@@ -226,9 +227,9 @@ class ReachySDK:
     def _get_joint_from_id(self, joint_id: joint_pb2.JointId) -> Joint:
         if joint_id.HasField('uid'):
             joint_name = self._joint_uid_to_name[joint_id.uid]
-            return [j for j in self.joints if j.name == joint_name][0]
+            return [j for j in self.joints.values() if j.name == joint_name][0]
         else:
-            return [j for j in self.joints if j.name == joint_id.name][0]
+            return [j for j in self.joints.values() if j.name == joint_id.name][0]
 
     def _get_sensor_from_id(self, sensor_id: sensor_pb2.SensorId) -> ForceSensor:
         if sensor_id.HasField('uid'):

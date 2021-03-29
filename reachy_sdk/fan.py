@@ -68,12 +68,12 @@ class Fans:
 
     def __init__(self, fans_list: List) -> None:
         """Set up fans, each given fan is an attribute of the class."""
-        self.fans_list = fans_list
+        self.dic = {f.name: f for f in fans_list}
         self._setup_fans(fans_list)
 
     def __repr__(self) -> str:
         """Clean representation of all the fans in the class."""
-        return '\n'.join([str(f) for f in self.fans_list])
+        return '\n'.join([str(f) for f in self.fans_dic.values()])
 
     def _setup_fans(self, fans_list):
         for f in fans_list:

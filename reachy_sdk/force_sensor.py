@@ -49,12 +49,12 @@ class ForceSensors:
 
     def __init__(self, force_sensors_list: List) -> None:
         """Set up the force sensors, each given force sensor is an attribute of the class."""
-        self.force_sensors_list = force_sensors_list
+        self.dic = {fs.name: fs for fs in force_sensors_list}
         self._setup_force_sensors(force_sensors_list)
 
     def __repr__(self) -> str:
         """Clean representation of all the force sensors in the class."""
-        return '\n'.join([str(f) for f in self.force_sensors_list])
+        return '\n'.join([str(f) for f in self.force_sensors_dic.values()])
 
     def _setup_force_sensors(self, force_sensors_list):
         for fs in force_sensors_list:
