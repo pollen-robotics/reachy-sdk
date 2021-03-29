@@ -37,12 +37,19 @@ class Head:
         if len(self.joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
+        self._setup_joints(joints)
+
         self._stub = OrbitaKinematicsStub(grpc_channel)
 
     @property
     def disks(self):
         """Return the three orbita disks. The inverse kinematics will always return the disk position in the same order."""
         return self._required_joints
+
+    def _setup_joints(self, joints) -> None:
+        for j in joints:
+            if j.name in self._required_joints:
+                setattr(self, j.name, j)
 
     def inverse_kinematics(self, quaternion: np.ndarray) -> List[float]:
         """Compute the inverse kinematics of the head.
