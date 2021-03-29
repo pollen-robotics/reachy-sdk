@@ -40,7 +40,10 @@ class Arm(ABC):
         if len(self.joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
+        self._setup_joints(joints)
+
         self.kinematics_chain = [j for j in self.joints if j.name in self._kinematics_chain]
+
 
     def __repr__(self) -> str:
         """Clean representation of an arm state."""
@@ -50,6 +53,11 @@ class Arm(ABC):
     @property
     def _side(self) -> str:
         ...
+
+    def _setup_joints(self, joints) -> None:
+        for j in joints:
+            if j.name in self._required_joints:
+                setattr(self, j.name, j)
 
     def forward_kinematics(self, joints_position: Optional[List[float]] = None) -> np.ndarray:
         """Compute the forward kinematics of the arm.
