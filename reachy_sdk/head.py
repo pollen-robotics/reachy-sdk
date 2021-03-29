@@ -43,7 +43,7 @@ class Head:
 
     def __repr__(self) -> str:
         """Clean representation of an Head state."""
-        return f'<Head joints={self.joints}\n>'
+        return f'<Head joints={self.joints}>'
 
     @property
     def disks(self):

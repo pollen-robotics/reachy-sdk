@@ -47,7 +47,7 @@ class Arm(ABC):
 
     def __repr__(self) -> str:
         """Clean representation of an arm state."""
-        return f'<Arm side="{self._side}" joints={self.joints}\n>'
+        return f'<Arm side="{self._side}" joints={self.joints}>'
 
     @property
     def _side(self) -> str:
