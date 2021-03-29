@@ -70,7 +70,7 @@ class Arm(ABC):
         if isinstance(joints_position, np.ndarray) and len(joints_position.shape) > 1:
             raise ValueError('Vectorized kinematics not supported!')
 
-        pos = np.deg2rad(joints_position)
+        pos = np.deg2rad(list(joints_position))
 
         if len(pos) != len(self._kinematics_chain):
             raise ValueError(
