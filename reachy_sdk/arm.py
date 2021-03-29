@@ -47,7 +47,7 @@ class Arm(ABC):
 
     def __repr__(self) -> str:
         """Clean representation of an arm state."""
-        s = '\n\t'.join([str(j) for j in self.joints])
+        s = '\n\t'.join([str(j) for j in self.joints.values()])
         return f'<Arm side="{self._side}" joints=\n\t{s}\n>'
 
     @property
