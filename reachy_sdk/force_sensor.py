@@ -42,7 +42,13 @@ class ForceSensor:
 
 
 class ForceSensors:
+    """ForceSensors class.
+
+    Contains each given force sensor.
+    """
+
     def __init__(self, force_sensors_list: List) -> None:
+        """Set up the force sensors, each given force sensor is an attribute of the class."""
         self.force_sensors_list = force_sensors_list
         self._setup_force_sensors(force_sensors_list)
 

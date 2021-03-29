@@ -31,6 +31,7 @@ from .joint import Joint
 
 class ReachyParts(Enum):
     """Reachy parts options."""
+
     REACHY = 1
     L_ARM = 2
     R_ARM = 3
@@ -60,7 +61,7 @@ class ReachySDK:
         self._fans_list: List[Fan] = []
         self._force_sensors_list: List[ForceSensor] = []
 
-        self._parts = ReachyParts   
+        self._parts = ReachyParts
 
         self._setup_joints()
         self._setup_arms()
@@ -239,6 +240,11 @@ class ReachySDK:
             return getattr(self, sensor_id.name)
 
     def turn_on(self, part):
+        """Turn the joints of the given Reachy's part stiff.
+
+        The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
+        Having part = 'reachy' corresponds to turning all avaible joints stiff.
+        """
         if part not in [p.name.lower() for p in self._parts]:
             print("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
 
@@ -254,8 +260,12 @@ class ReachySDK:
         for joint in req_part.joints:
             joint.compliant = False
 
-
     def turn_off(self, part):
+        """Turn the joints of the given Reachy's part compliant.
+
+        The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
+        Having part = 'reachy' corresponds to turning all avaible joints compliant.
+        """
         if part not in [p.name.lower() for p in self._parts]:
             print("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
             return

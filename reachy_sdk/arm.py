@@ -44,7 +44,6 @@ class Arm(ABC):
 
         self.kinematics_chain = [j for j in self.joints if j.name in self._kinematics_chain]
 
-
     def __repr__(self) -> str:
         """Clean representation of an arm state."""
         s = '\n\t'.join([str(j) for j in self.joints])
