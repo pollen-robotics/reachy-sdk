@@ -9,10 +9,10 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from reachy_sdk_api.joint_pb2 import JointId
 from reachy_sdk_api.orbita_kinematics_pb2_grpc import OrbitaKinematicsStub
 from reachy_sdk_api.orbita_kinematics_pb2 import LookVector, OrbitaIKRequest, kinematics__pb2
 
+from .device_holder import DeviceHolder
 from .joint import Joint
 from .trajectory import goto, goto_async
 from .trajectory.interpolation import InterpolationMode
@@ -32,17 +32,28 @@ class Head:
 
     def __init__(self, joints: List[Joint], grpc_channel) -> None:
         """Set up the head with its kinematics."""
-        self.joints = [j for j in joints if j.name in self._required_joints]
-
-        if len(self.joints) != len(self._required_joints):
+        found_joints = [j for j in joints if j.name in self._required_joints]
+        if len(found_joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
+        self.joints = DeviceHolder(found_joints)
+        self._setup_joints(found_joints)
+
         self._stub = OrbitaKinematicsStub(grpc_channel)
+
+    def __repr__(self) -> str:
+        """Clean representation of an Head state."""
+        return f'<Head joints={self.joints}>'
 
     @property
     def disks(self):
         """Return the three orbita disks. The inverse kinematics will always return the disk position in the same order."""
         return self._required_joints
+
+    def _setup_joints(self, joints) -> None:
+        for j in joints:
+            if j.name in self._required_joints:
+                setattr(self, j.name, j)
 
     def inverse_kinematics(self, quaternion: np.ndarray) -> List[float]:
         """Compute the inverse kinematics of the head.
@@ -66,14 +77,14 @@ class Head:
             raise ValueError(f'Could not find a solution for the given quaternion {quaternion}!')
 
         d = {
-            self._get_joint_from_id(joint_id): np.rad2deg(pos)
+            self.joints._get_device_from_id(joint_id): np.rad2deg(pos)
 
             for joint_id, pos in zip(
                 solution.disk_position.ids,
                 solution.disk_position.positions,
             )
         }
-        return [d[j] for j in self.joints]
+        return [d[j] for j in self.joints.values()]
 
     async def look_at_async(
         self,
@@ -126,13 +137,3 @@ class Head:
         q = self._stub.GetQuaternionTransform(LookVector(x=x, y=y, z=z))
         goal_positions = self.inverse_kinematics(np.array((q.x, q.y, q.z, q.w)))
         return dict(zip(self.joints, goal_positions))
-
-    def _get_joint_from_id(self, joint_id: JointId) -> Joint:
-        if joint_id.HasField('uid'):
-            for j in self.joints:
-                if j.uid == joint_id.uid:
-                    return j
-            else:
-                raise IndexError(f'No joints found for Id {joint_id}')
-        else:
-            return getattr(self, joint_id.name)
