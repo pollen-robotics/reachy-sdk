@@ -59,8 +59,12 @@ class Fan:
             state = 'on' if self.is_on else 'off'
             raise IOError(f'Could not set fan "{self.name}" {state}!')
 
+
 class Fans:
+    """Fans class, contains each given Fan."""
+
     def __init__(self, fans_list: List) -> None:
+        """Set up fans, each given fan is an attribute of the class."""
         self.fans_list = fans_list
         self._setup_fans(fans_list)
 
