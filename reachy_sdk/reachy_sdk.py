@@ -62,6 +62,7 @@ class ReachySDK:
         self._fans: List[Fan] = []
         self._force_sensors: List[ForceSensor] = []
 
+        self._ready = threading.Event()
 
         self._setup_joints()
         self._setup_arms()
@@ -77,6 +78,8 @@ class ReachySDK:
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
         self._sync_thread.start()
+
+        self._ready.wait()
 
     def __repr__(self) -> str:
         """Clean representation of a Reachy."""
@@ -213,6 +216,8 @@ class ReachySDK:
     async def _sync_loop(self):
         for joint in self._joints:
             joint._setup_sync_loop()
+
+        self._ready.set()
 
         async_channel = grpc.aio.insecure_channel(f'{self._host}:{self._sdk_port}')
         joint_stub = joint_pb2_grpc.JointServiceStub(async_channel)
