@@ -57,8 +57,8 @@ reachy = ReachySDK(host='my-reachy-ip')
 Gettting the current joints position can be done via:
 
 ```python
-for joint in reachy.joints:
-    print(f'Joint {joint.name} is at position {joint.present_position} degree.')
+for name, joint in reachy.joints.items():
+    print(f'Joint {name} is at position {joint.present_position} degree.')
 ```
 
 And displaying, via matplotlib, the last image of the left camera:
