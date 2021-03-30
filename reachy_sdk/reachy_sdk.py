@@ -8,6 +8,7 @@ You can also send joint commands, compute forward or inverse kinematics.
 """
 
 import asyncio
+import atexit
 import threading
 import time
 from typing import List
@@ -63,6 +64,7 @@ class ReachySDK:
         self._force_sensors: List[ForceSensor] = []
 
         self._ready = threading.Event()
+        self._pushed_command = threading.Event()
 
         self._setup_joints()
         self._setup_arms()
@@ -78,6 +80,8 @@ class ReachySDK:
         self._sync_thread = threading.Thread(target=self._start_sync_in_bg)
         self._sync_thread.daemon = True
         self._sync_thread.start()
+
+        _open_connection.append(self)
 
         self._ready.wait()
 
@@ -209,6 +213,8 @@ class ReachySDK:
 
                 commands = await self._poll_waiting_commands()
                 yield commands
+                self._pushed_command.set()
+                self._pushed_command.clear()
                 last_pub = time.time()
 
         await joint_stub.StreamJointsCommands(command_poll())
@@ -256,3 +262,18 @@ class ReachySDK:
         Having part = 'reachy' corresponds to turning all avaible joints compliant.
         """
         self._change_compliancy(part, compliant=True)
+
+
+_open_connection: List[ReachySDK] = []
+
+
+def flush_communication():
+    """Flush communication before leaving.
+
+    We make sure all buffered commands have been sent before actually leaving.
+    """
+    for reachy in _open_connection:
+        reachy._pushed_command.wait(timeout=0.5)
+
+
+atexit.register(flush_communication)
