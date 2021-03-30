@@ -62,7 +62,6 @@ class ReachySDK:
         self._fans: List[Fan] = []
         self._force_sensors: List[ForceSensor] = []
 
-        self._parts = ReachyParts
 
         self._setup_joints()
         self._setup_arms()
@@ -226,7 +225,7 @@ class ReachySDK:
         )
 
     def _change_compliancy(self, part, compliant: bool):
-        if part not in [p.name.lower() for p in self._parts]:
+        if part not in [p.name.lower() for p in ReachyParts]:
             raise ValueError("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
 
         if part == 'reachy':
