@@ -42,9 +42,7 @@ The SDK depends on [numpy](https://numpy.org), [opencv](https://opencv.org) and 
 
 ## Getting Started
 
-To get started with your Reachy installation and setup, see our [official guide](https://pollen-robotics.github.io/reachy-2021-docs/sdk/getting-started/introduction/).
-
-To get started with the SDK, you should have a look at all our [notebooks](./notebooks).
+To get started with your Reachy installation and setup, see our [official guide](https://pollen-robotics.github.io/reachy-2021-docs/).
 
 Connecting the SDK to a real robot is as simple as:
 
