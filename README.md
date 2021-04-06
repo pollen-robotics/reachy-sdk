@@ -42,7 +42,7 @@ The SDK depends on [numpy](https://numpy.org), [opencv](https://opencv.org) and 
 
 ## Getting Started
 
-To get started with your Reachy installation and setup, see our [official guide](TODO).
+To get started with your Reachy installation and setup, see our [official guide](https://pollen-robotics.github.io/reachy-2021-docs/sdk/getting-started/introduction/).
 
 To get started with the SDK, you should have a look at all our [notebooks](./notebooks).
 
@@ -71,7 +71,7 @@ plt.figure()
 plt.plot(cv.cvtColor(reachy.left_camera.last_frame, cv.COLOR_BGR2RGB))
 ```
 
-For more advanced examples, see the different [notebooks](./notebooks). Also note that the SDK will automatically reflect your Reachy configuration you have (Arm, Starter Kit or Full Kit). Thus, all joints or sensors you see in the examples won't necessarly be available on your specific SDK.
+For more advanced examples, see the [official documentation](https://pollen-robotics.github.io/reachy-2021-docs/sdk/getting-started/introduction/).
 
 ## APIs
 
