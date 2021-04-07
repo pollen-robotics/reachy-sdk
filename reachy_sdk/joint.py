@@ -13,6 +13,14 @@ from reachy_sdk_api.joint_pb2 import JointId, JointState, JointCommand, PIDValue
 from .register import MetaRegister, Register
 
 
+def _to_position(internal_pos: float) -> float:
+    return round(np.rad2deg(internal_pos), 2)
+
+
+def _to_internal_position(pos: float) -> float:
+    return np.deg2rad(pos)
+
+
 class Joint(metaclass=MetaRegister):
     """The Joint class represents (any dynamixel motor or one of orbita's disk) and its registers.
 
@@ -35,14 +43,14 @@ class Joint(metaclass=MetaRegister):
     name = Register(readonly=True, type=str)
     uid = Register(readonly=True, type=UInt32Value)
 
-    present_position = Register(readonly=True, type=FloatValue, conversion=(np.deg2rad, np.rad2deg))
-    present_speed = Register(readonly=True, type=FloatValue, conversion=(np.deg2rad, np.rad2deg))
+    present_position = Register(readonly=True, type=FloatValue, conversion=(_to_internal_position, _to_position))
+    present_speed = Register(readonly=True, type=FloatValue, conversion=(_to_internal_position, _to_position))
     present_load = Register(readonly=True, type=FloatValue)
     temperature = Register(readonly=True, type=FloatValue)
 
     compliant = Register(readonly=False, type=BoolValue)
-    goal_position = Register(readonly=False, type=FloatValue, conversion=(np.deg2rad, np.rad2deg))
-    speed_limit = Register(readonly=False, type=FloatValue, conversion=(np.deg2rad, np.rad2deg))
+    goal_position = Register(readonly=False, type=FloatValue, conversion=(_to_internal_position, _to_position))
+    speed_limit = Register(readonly=False, type=FloatValue, conversion=(_to_internal_position, _to_position))
     torque_limit = Register(readonly=False, type=FloatValue)
 
     pid = Register(readonly=False, type=PIDValue)
