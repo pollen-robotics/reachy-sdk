@@ -136,4 +136,4 @@ class Head:
     def _look_at(self, x: float, y: float, z: float) -> Dict[Joint, float]:
         q = self._stub.GetQuaternionTransform(LookVector(x=x, y=y, z=z))
         goal_positions = self.inverse_kinematics(np.array((q.x, q.y, q.z, q.w)))
-        return dict(zip(self.joints, goal_positions))
+        return dict(zip(list(self.joints.values()), goal_positions))
