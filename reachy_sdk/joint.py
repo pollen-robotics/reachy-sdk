@@ -19,7 +19,7 @@ def _to_position(internal_pos: float) -> float:
 
 def _to_internal_position(pos: float) -> float:
     return np.deg2rad(pos)
-    
+
 
 class Joint(metaclass=MetaRegister):
     """The Joint class represents (any dynamixel motor or one of orbita's disk) and its registers.
