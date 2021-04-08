@@ -1,7 +1,6 @@
 """This module define the Joint class (any dynamixel motor or one of orbita's disk) and its registers."""
 
 import asyncio
-import threading
 from typing import Any, Dict, List
 
 import numpy as np
@@ -58,7 +57,6 @@ class Joint(metaclass=MetaRegister):
     def __init__(self, initial_state: JointState) -> None:
         """Set up the joint with its initial state retrieved from the robot."""
         self._state: Dict[str, Any] = {}
-        self._sync_lock = threading.Lock()
 
         self._update_with(initial_state)
 
@@ -82,9 +80,12 @@ class Joint(metaclass=MetaRegister):
         """Set a new value for a register of the Joint using the joint[register_name] = value notation."""
         self._state[field] = value
 
-        with self._sync_lock:
+        async def set_in_loop():
             self._register_needing_sync.append(field)
             self._need_sync.set()
+
+        fut = asyncio.run_coroutine_threadsafe(set_in_loop(), self._loop)
+        fut.result()
 
     def _setup_sync_loop(self):
         """Set up the async synchronisation loop.
@@ -95,6 +96,7 @@ class Joint(metaclass=MetaRegister):
         The _register_needing_sync stores a list of the register that need to be synced.
         """
         self._need_sync = asyncio.Event()
+        self._loop = asyncio.get_running_loop()
         self._register_needing_sync: List[str] = []
 
     def _update_with(self, new_state: JointState):
@@ -113,8 +115,7 @@ class Joint(metaclass=MetaRegister):
         })
         command = JointCommand(**values)
 
-        with self._sync_lock:
-            self._register_needing_sync.clear()
-            self._need_sync.clear()
+        self._register_needing_sync.clear()
+        self._need_sync.clear()
 
         return command
