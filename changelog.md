@@ -9,3 +9,4 @@
 
 * Wait for the sync loop to be ready before returning ReachySDK instance.
 * Flush commands at exit.
+* Fix async joint control issue.
