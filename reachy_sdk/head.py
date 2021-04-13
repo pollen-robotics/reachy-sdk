@@ -27,15 +27,13 @@ class Head:
     """
 
     _required_joints = {
-        'neck_disk_bottom', 'neck_disk_middle', 'neck_disk_top',
+        'neck_disk_bottom', 'neck_disk_middle', 'neck_disk_top', 'l_antenna', 'r_antenna',
     }
-
-    _antennas = {'l_antenna', 'r_antenna'}
 
     def __init__(self, joints: List[Joint], grpc_channel) -> None:
         """Set up the head with its kinematics."""
-        found_joints = [j for j in joints if j.name in self._required_joints | self._antennas]
-        if len(found_joints) != len(self._required_joints) + len(self._antennas):
+        found_joints = [j for j in joints if j.name in self._required_joints]
+        if len(found_joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
         self.joints = DeviceHolder(found_joints)
@@ -56,7 +54,7 @@ class Head:
 
     def _setup_joints(self, joints) -> None:
         for j in joints:
-            if j.name in self._required_joints | self._antennas:
+            if j.name in self._required_joints:
                 setattr(self, j.name, j)
 
     def inverse_kinematics(self, quaternion: np.ndarray) -> List[float]:
