@@ -263,6 +263,31 @@ class ReachySDK:
         """
         self._change_compliancy(part, compliant=True)
 
+    def turn_off_smoothly(self, part):
+        """Turn smoothly the joints of the given Reachy's part compliant.
+        Used to prevent parts from falling too hard.
+
+        The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
+        Having part = 'reachy' corresponds to turning all avaible joints compliant.
+        """
+        if part not in [p.name.lower() for p in ReachyParts]:
+            raise ValueError("Part to turn on/off should be either 'reachy', 'l_arm', 'r_arm' or 'head'.")
+
+        if part == 'reachy':
+            req_part = self
+        else:
+            req_part = getattr(self, part)
+
+        for joint in req_part.joints.values():
+            joint.torque_limit = 0.0
+
+        time.sleep(2.0)
+
+        self._change_compliancy(part, compliant=True)
+
+        for joint in req_part.joints.values():
+            joint.torque_limit = 100.0
+
 
 _open_connection: List[ReachySDK] = []
 
