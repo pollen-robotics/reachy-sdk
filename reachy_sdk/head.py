@@ -50,7 +50,7 @@ class Head:
     @property
     def disks(self):
         """Return the three orbita disks. The inverse kinematics will always return the disk position in the same order."""
-        return self._required_joints
+        return {j for j in self._required_joints if j in ['neck_disk_bottom', 'neck_disk_middle', 'neck_disk_top']}
 
     def _setup_joints(self, joints) -> None:
         for j in joints:
