@@ -265,7 +265,8 @@ class ReachySDK:
 
     def turn_off_smoothly(self, part):
         """Turn smoothly the joints of the given Reachy's part compliant.
-        Used to prevent parts from falling too hard.
+
+        Used to prevent parts from falling too hardwhen turned compliant.
 
         The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
         Having part = 'reachy' corresponds to turning all avaible joints compliant.
