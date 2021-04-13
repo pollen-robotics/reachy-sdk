@@ -27,7 +27,7 @@ class Head:
     """
 
     _required_joints = {
-        'neck_disk_bottom', 'neck_disk_middle', 'neck_disk_top',
+        'neck_disk_bottom', 'neck_disk_middle', 'neck_disk_top', 'l_antenna', 'r_antenna',
     }
 
     def __init__(self, joints: List[Joint], grpc_channel) -> None:
@@ -37,6 +37,8 @@ class Head:
             raise ValueError(f'Required joints not found {self._required_joints}')
 
         self.joints = DeviceHolder(found_joints)
+        self._disk_joints = [j for j in self.joints.values() if j.name in self.disks]
+
         self._setup_joints(found_joints)
 
         self._stub = OrbitaKinematicsStub(grpc_channel)
@@ -84,7 +86,7 @@ class Head:
                 solution.disk_position.positions,
             )
         }
-        return [d[j] for j in self.joints.values()]
+        return [d[j] for j in self._disk_joints]
 
     async def look_at_async(
         self,
@@ -136,4 +138,4 @@ class Head:
     def _look_at(self, x: float, y: float, z: float) -> Dict[Joint, float]:
         q = self._stub.GetQuaternionTransform(LookVector(x=x, y=y, z=z))
         goal_positions = self.inverse_kinematics(np.array((q.x, q.y, q.z, q.w)))
-        return dict(zip(list(self.joints.values()), goal_positions))
+        return dict(zip(self._disk_joints, goal_positions))
