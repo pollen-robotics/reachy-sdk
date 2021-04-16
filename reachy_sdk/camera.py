@@ -123,7 +123,7 @@ class Camera:
 
     def _start_sync_in_bg(self):
         def poll_img():
-            request=camera_reachy_pb2.ImageRequest(
+            request = camera_reachy_pb2.ImageRequest(
                 camera=self._camera,
             )
 
