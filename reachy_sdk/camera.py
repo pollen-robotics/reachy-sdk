@@ -123,13 +123,13 @@ class Camera:
 
     def _start_sync_in_bg(self):
         def poll_img():
-            stream_request = camera_reachy_pb2.StreamImageRequest(
-                request=camera_reachy_pb2.ImageRequest(
-                    camera=self._camera,
-                ),
+            request=camera_reachy_pb2.ImageRequest(
+                camera=self._camera,
             )
 
-            for resp in self._stub.StreamImage(stream_request):
+            while True:
+                resp = self._stub.GetImage(request)
+
                 buff = np.frombuffer(resp.data, dtype=np.uint8)
                 self._last_frame = cv.imdecode(buff, cv.IMREAD_COLOR)
                 self._got_img.set()
