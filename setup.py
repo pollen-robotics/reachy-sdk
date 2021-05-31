@@ -21,7 +21,7 @@ setup(
         'numpy',
         'opencv-python',
         'reachy-sdk-api',
-        'grpcio',
+        'grpcio>=1.37',
         'protobuf>3',
     ],
 
