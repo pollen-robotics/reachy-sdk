@@ -128,14 +128,14 @@ class Camera:
         """Start autofocus."""
         resp = self._stub.StartAutofocus(self._camera)
         if not resp.success:
-            raise ValueError(f'Could not start autofocus for {self._side} camera!')
+            raise EnvironmentError(f'Could not start autofocus for {self._side} camera!')
 
     @property
     def stop_autofocus(self):
         """Stop autofocus."""
         resp = self._stub.StopAutofocus(self._camera)
         if not resp.success:
-            raise ValueError(f'Could not start autofocus for {self._side} camera!')
+            raise EnvironmentError(f'Could not start autofocus for {self._side} camera!')
 
     @property
     def focus(self):
