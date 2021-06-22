@@ -7,6 +7,8 @@ The synchronisation is done in background and only started when you need it.
 from enum import Enum
 from typing import Optional
 import cv2 as cv
+from google.protobuf.empty_pb2 import Empty
+from google.protobuf.wrappers_pb2 import UInt32Value
 import numpy as np
 
 from threading import Event, Thread
@@ -120,6 +122,62 @@ class Camera:
         )
         if not resp.success:
             raise ValueError('Could not set new zoom level!')
+
+    @property
+    def start_autofocus(self):
+        """Start autofocus."""
+        resp = self._stub.StartAutofocus(self._camera)
+        if not resp.success:
+            raise EnvironmentError(f'Could not start autofocus for {self._side} camera!')
+
+    @property
+    def stop_autofocus(self):
+        """Stop autofocus."""
+        resp = self._stub.StopAutofocus(self._camera)
+        if not resp.success:
+            raise EnvironmentError(f'Could not start autofocus for {self._side} camera!')
+
+    @property
+    def focus(self):
+        """Get focus value."""
+        resp = self._stub.GetZoomFocus(Empty())
+        return getattr(resp, self._side + '_focus').value
+
+    @focus.setter
+    def focus(self, focus: int):
+        """Set focus value."""
+        if self._side == 'left':
+            request = camera_reachy_pb2.ZoomFocusMessage(
+                left_focus=UInt32Value(value=focus)
+                )
+        else:
+            request = camera_reachy_pb2.ZoomFocusMessage(
+                right_focus=UInt32Value(value=focus)
+                )
+        resp = self._stub.SetZoomFocus(request=request)
+        if not resp.success:
+            raise ValueError(f'Could not set {self._side} focus!')
+
+    @property
+    def zoom(self):
+        """Get zoom value."""
+        resp = self._stub.GetZoomFocus(Empty())
+        return getattr(resp, self._side + '_zoom').value
+
+    @zoom.setter
+    def zoom(self, zoom: int):
+        """Set zoom value."""
+        if self._side == 'left':
+            request = camera_reachy_pb2.ZoomFocusMessage(
+                left_zoom=UInt32Value(value=zoom)
+                )
+        else:
+            request = camera_reachy_pb2.ZoomFocusMessage(
+                right_zoom=UInt32Value(value=zoom)
+                )
+        resp = self._stub.SetZoomFocus(request=request)
+        if not resp.success:
+            raise ValueError(f'Could not set {self._side} zoom!')
 
     def _start_sync_in_bg(self):
         def poll_img():
