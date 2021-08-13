@@ -53,11 +53,12 @@ class ReachySDK:
     The synchronisation with the robot is automatically launched at instanciation and is handled in background automatically.
     """
 
-    def __init__(self, host: str, sdk_port: int = 50055, camera_port: int = 50057) -> None:
+    def __init__(self, host: str, sdk_port: int = 50055, camera_port: int = 50057, restart_port: int = 50059) -> None:
         """Set up the connection with the robot."""
         self._host = host
         self._sdk_port = sdk_port
         self._camera_port = camera_port
+        self._restart_port = restart_port
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
         self._joints: List[Joint] = []
@@ -67,7 +68,7 @@ class ReachySDK:
         self._ready = threading.Event()
         self._pushed_command = threading.Event()
 
-        self._restart_signal_stub = restart_signal_pb2_grpc.RestartServiceStub(self._grpc_channel)
+        self._restart_signal_stub = restart_signal_pb2_grpc.RestartServiceStub(f'{self._host}:{self._restart_port}')
 
         self._setup_joints()
         self._setup_arms()
