@@ -21,6 +21,7 @@ from reachy_sdk_api import camera_reachy_pb2_grpc
 from reachy_sdk_api import joint_pb2, joint_pb2_grpc
 from reachy_sdk_api import fan_pb2_grpc
 from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
+from reachy_sdk_api import restart_signal_pb2, restart_signal_pb2_grpc
 
 from .arm import LeftArm, RightArm
 from .camera import Camera
@@ -65,6 +66,8 @@ class ReachySDK:
 
         self._ready = threading.Event()
         self._pushed_command = threading.Event()
+
+        self._restart_signal_stub = restart_signal_pb2_grpc.RestartServiceStub(self._grpc_channel)
 
         self._setup_joints()
         self._setup_arms()
@@ -288,6 +291,20 @@ class ReachySDK:
 
         for joint in req_part.joints.values():
             joint.torque_limit = 100.0
+
+    def _restart(self):
+        self._restart_signal_stub.SendRestartSignal(
+            restart_signal_pb2.RestartCmd(
+                cmd=restart_signal_pb2.SignalType.RESTART
+            )
+        )
+
+    def _stop(self):
+        self._restart_signal_stub.SendRestartSignal(
+            restart_signal_pb2.RestartCmd(
+                cmd=restart_signal_pb2.SignalType.STOP
+            )
+        )
 
 
 _open_connection: List[ReachySDK] = []
