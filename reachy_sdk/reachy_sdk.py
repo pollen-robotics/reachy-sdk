@@ -21,6 +21,7 @@ from reachy_sdk_api import camera_reachy_pb2_grpc
 from reachy_sdk_api import joint_pb2, joint_pb2_grpc
 from reachy_sdk_api import fan_pb2_grpc
 from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
+from reachy_sdk_api import restart_signal_pb2, restart_signal_pb2_grpc
 
 from .arm import LeftArm, RightArm
 from .camera import Camera
@@ -52,11 +53,12 @@ class ReachySDK:
     The synchronisation with the robot is automatically launched at instanciation and is handled in background automatically.
     """
 
-    def __init__(self, host: str, sdk_port: int = 50055, camera_port: int = 50057) -> None:
+    def __init__(self, host: str, sdk_port: int = 50055, camera_port: int = 50057, restart_port: int = 50059) -> None:
         """Set up the connection with the robot."""
         self._host = host
         self._sdk_port = sdk_port
         self._camera_port = camera_port
+        self._restart_port = restart_port
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
 
         self._joints: List[Joint] = []
@@ -65,6 +67,8 @@ class ReachySDK:
 
         self._ready = threading.Event()
         self._pushed_command = threading.Event()
+
+        self._restart_signal_stub = restart_signal_pb2_grpc.RestartServiceStub(f'{self._host}:{self._restart_port}')
 
         self._setup_joints()
         self._setup_arms()
@@ -288,6 +292,20 @@ class ReachySDK:
 
         for joint in req_part.joints.values():
             joint.torque_limit = 100.0
+
+    def _restart(self):
+        self._restart_signal_stub.SendRestartSignal(
+            restart_signal_pb2.RestartCmd(
+                cmd=restart_signal_pb2.SignalType.RESTART
+            )
+        )
+
+    def _stop(self):
+        self._restart_signal_stub.SendRestartSignal(
+            restart_signal_pb2.RestartCmd(
+                cmd=restart_signal_pb2.SignalType.STOP
+            )
+        )
 
 
 _open_connection: List[ReachySDK] = []
