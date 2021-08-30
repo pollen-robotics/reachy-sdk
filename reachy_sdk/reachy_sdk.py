@@ -143,12 +143,15 @@ class ReachySDK:
     def _setup_force_sensors(self):
         force_stub = sensor_pb2_grpc.SensorServiceStub(self._grpc_channel)
         resp = force_stub.GetAllForceSensorsId(Empty())
-        names, uids = resp.names, resp.uids
+        if resp.names == []:
+            names, uids, states = [], [], []
+        else:
+            names, uids = resp.names, resp.uids
 
-        resp = force_stub.GetSensorsState(
-            sensor_pb2.SensorsStateRequest(ids=[sensor_pb2.SensorId(uid=uid) for uid in uids]),
-        )
-        states = resp.states
+            resp = force_stub.GetSensorsState(
+                sensor_pb2.SensorsStateRequest(ids=[sensor_pb2.SensorId(uid=uid) for uid in uids]),
+            )
+            states = resp.states
         for name, uid, state in zip(names, uids, states):
             force_sensor = ForceSensor(name, uid, state.force_sensor_state)
             self._force_sensors.append(force_sensor)
