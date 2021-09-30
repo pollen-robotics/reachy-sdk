@@ -180,6 +180,8 @@ class Camera:
             raise ValueError(f'Could not set {self._side} zoom!')
 
     def _start_sync_in_bg(self):
+        self._initialized = True
+
         def poll_img():
             stream_request = camera_reachy_pb2.StreamImageRequest(
                 request=camera_reachy_pb2.ImageRequest(
@@ -191,6 +193,7 @@ class Camera:
                 buff = np.frombuffer(resp.data, dtype=np.uint8)
                 self._last_frame = cv.imdecode(buff, cv.IMREAD_COLOR)
                 self._got_img.set()
+
 
         self._t = Thread(target=poll_img)
         self._t.daemon = True
