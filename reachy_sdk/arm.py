@@ -145,6 +145,52 @@ class Arm(ABC):
         )
 
 
+class OrbitaArm(Arm):
+    def forward_kinematics(self, joints_position: Optional[List[float]] = None) -> np.ndarray:
+        """The forward kinematics of an orbita arm is not analytically defined.
+
+        We will implement numerical solutions soon.
+        """
+        raise NotImplementedError
+
+    def inverse_kinematics(self, target: np.ndarray, q0: Optional[List[float]] = None) -> List[float]:
+        """Compute the inverse kinematics of the arm.
+
+        Given a pose 4x4 target matrix (as a numpy array) expressed in Reachy coordinate systems,
+        it will try to compute a joint solution to reach this target (or get close).
+
+        It will raise a ValueError if no solution is found.
+
+        You can also specify a basic joint configuration as a prior for the solution.
+        """
+        if target.shape != (4, 4):
+            raise ValueError('target shape should be (4, 4) (got {target.shape} instead)!')
+
+        if q0 is not None and (len(q0) != len(self._kinematics_chain)):
+            raise ValueError(f'q0 should be length {len(self._kinematics_chain)} (got {len(q0)} instead)!')
+
+        if isinstance(q0, np.ndarray) and len(q0.shape) > 1:
+            raise ValueError('Vectorized kinematics not supported!')
+
+        req_params = {
+            'target': ArmEndEffector(
+                side=self._arm_side,
+                pose=Matrix4x4(data=target.flatten().tolist()),
+            )
+        }
+
+        if q0 is not None:
+            req_params['q0'] = self._joint_position_from_pos(np.deg2rad(q0))
+
+        req = ArmIKRequest(**req_params)
+        resp = self._kin_stub.ComputeOrbitaArmIK(req)
+
+        if not resp.success:
+            raise ValueError(f'No solution found for the given target ({target})!')
+
+        return np.rad2deg(resp.arm_position.positions.positions).tolist()
+
+
 class LeftArm(Arm):
     """LeftArm class, all the work is actually done by the ABC Arm class.
 
