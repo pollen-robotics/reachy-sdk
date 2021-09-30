@@ -213,7 +213,7 @@ class LeftArm(Arm):
     }
 
 
-class RightArm(Arm):
+class RightArm(OrbitaArm):
     """RightArm class, all the work is actually done by the ABC Arm class.
 
     It exposes the kinematics of the arm:
@@ -223,13 +223,10 @@ class RightArm(Arm):
 
     _side = 'right'
     _kinematics_chain = (
-        'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
-        'r_elbow_pitch', 'r_forearm_yaw',
-        'r_wrist_pitch', 'r_wrist_roll',
+        'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw', 'r_elbow_pitch',
+        'painteffector_disk_bottom', 'painteffector_disk_middle', 'painteffector_disk_top',
     )
     _required_joints = {
-        'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
-        'r_elbow_pitch', 'r_forearm_yaw',
-        'r_wrist_pitch', 'r_wrist_roll',
-        'r_gripper',
+        'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw', 'r_elbow_pitch',
+        'painteffector_disk_bottom', 'painteffector_disk_middle', 'painteffector_disk_top',
     }
