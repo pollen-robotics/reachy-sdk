@@ -38,12 +38,14 @@ class Arm(ABC):
 
         found_joints = [j for j in joints if j.name in self._required_joints]
         if len(found_joints) != len(self._required_joints):
-            raise ValueError(f'Required joints not found {self._required_joints}')
+            raise ValueError(
+                f'Required joints not found {self._required_joints}')
 
         self.joints = DeviceHolder(found_joints)
         self._setup_joints(found_joints)
 
-        self.kinematics_chain = DeviceHolder([j for j in found_joints if j.name in self._kinematics_chain])
+        self.kinematics_chain = DeviceHolder(
+            [j for j in found_joints if j.name in self._kinematics_chain])
 
     def __repr__(self) -> str:
         """Clean representation of an arm state."""
@@ -65,7 +67,8 @@ class Arm(ABC):
         You can either specify a given joints position, otherwise it will use the current robot position.
         """
         if joints_position is None:
-            joints_position = [j.present_position for j in self.kinematics_chain.values()]
+            joints_position = [
+                j.present_position for j in self.kinematics_chain.values()]
 
         if isinstance(joints_position, np.ndarray) and len(joints_position.shape) > 1:
             raise ValueError('Vectorized kinematics not supported!')
@@ -85,7 +88,8 @@ class Arm(ABC):
         )
         resp = self._kin_stub.ComputeArmFK(req)
         if not resp.success:
-            raise ValueError(f'No solution found for the given joints ({joints_position})!')
+            raise ValueError(
+                f'No solution found for the given joints ({joints_position})!')
 
         return np.array(resp.end_effector.pose.data).reshape((4, 4))
 
@@ -100,10 +104,12 @@ class Arm(ABC):
         You can also specify a basic joint configuration as a prior for the solution.
         """
         if target.shape != (4, 4):
-            raise ValueError('target shape should be (4, 4) (got {target.shape} instead)!')
+            raise ValueError(
+                'target shape should be (4, 4) (got {target.shape} instead)!')
 
         if q0 is not None and (len(q0) != len(self._kinematics_chain)):
-            raise ValueError(f'q0 should be length {len(self._kinematics_chain)} (got {len(q0)} instead)!')
+            raise ValueError(
+                f'q0 should be length {len(self._kinematics_chain)} (got {len(q0)} instead)!')
 
         if isinstance(q0, np.ndarray) and len(q0.shape) > 1:
             raise ValueError('Vectorized kinematics not supported!')
@@ -122,7 +128,8 @@ class Arm(ABC):
         resp = self._kin_stub.ComputeArmIK(req)
 
         if not resp.success:
-            raise ValueError(f'No solution found for the given target ({target})!')
+            raise ValueError(
+                f'No solution found for the given target ({target})!')
 
         return np.rad2deg(resp.arm_position.positions.positions).tolist()
 
@@ -146,12 +153,47 @@ class Arm(ABC):
 
 
 class OrbitaArm(Arm):
-    def forward_kinematics(self, joints_position: Optional[List[float]] = None) -> np.ndarray:
-        """The forward kinematics of an orbita arm is not analytically defined.
+    # def forward_kinematics(self, joints_position: Optional[List[float]] = None) -> np.ndarray:
+    #     """The forward kinematics of an orbita arm is not analytically defined.
 
-        We will implement numerical solutions soon.
+    #     We will implement numerical solutions soon.
+    #     """
+    #     raise NotImplementedError
+
+    def forward_kinematics(self, joints_position: Optional[List[float]] = None) -> np.ndarray:
+        """Compute the forward kinematics of the arm.
+
+        It will return the pose 4x4 matrix (as a numpy array) expressed in Reachy coordinate systems.
+        You can either specify a given joints position, otherwise it will use the current robot position.
         """
-        raise NotImplementedError
+        if joints_position is None:
+            joints_position = [
+                j.present_position for j in self.kinematics_chain.values()]
+
+        # joints_position += [0.0, 0.0, 0.0]  # set dummy joints to 0
+
+        if isinstance(joints_position, np.ndarray) and len(joints_position.shape) > 1:
+            raise ValueError('Vectorized kinematics not supported!')
+
+        pos = np.deg2rad(list(joints_position))
+
+        if len(pos) != len(self._kinematics_chain):
+            raise ValueError(
+                f'joints_position should be length {len(self._kinematics_chain)} (got {len(pos)} instead)!'
+            )
+
+        req = ArmFKRequest(
+            arm_position=ArmJointPosition(
+                side=self._arm_side,
+                positions=self._joint_position_from_pos(pos),
+            ),
+        )
+        resp = self._kin_stub.ComputeArmFK(req)
+        if not resp.success:
+            raise ValueError(
+                f'No solution found for the given joints ({joints_position})!')
+
+        return np.array(resp.end_effector.pose.data).reshape((4, 4))
 
     def inverse_kinematics(self, target: np.ndarray, q0: Optional[List[float]] = None) -> List[float]:
         """Compute the inverse kinematics of the arm.
@@ -164,10 +206,12 @@ class OrbitaArm(Arm):
         You can also specify a basic joint configuration as a prior for the solution.
         """
         if target.shape != (4, 4):
-            raise ValueError('target shape should be (4, 4) (got {target.shape} instead)!')
+            raise ValueError(
+                'target shape should be (4, 4) (got {target.shape} instead)!')
 
         if q0 is not None and (len(q0) != len(self._kinematics_chain)):
-            raise ValueError(f'q0 should be length {len(self._kinematics_chain)} (got {len(q0)} instead)!')
+            raise ValueError(
+                f'q0 should be length {len(self._kinematics_chain)} (got {len(q0)} instead)!')
 
         if isinstance(q0, np.ndarray) and len(q0.shape) > 1:
             raise ValueError('Vectorized kinematics not supported!')
@@ -183,10 +227,12 @@ class OrbitaArm(Arm):
             req_params['q0'] = self._joint_position_from_pos(np.deg2rad(q0))
 
         req = ArmIKRequest(**req_params)
-        resp = self._kin_stub.ComputeOrbitaArmIK(req)
+        # resp = self._kin_stub.ComputeOrbitaArmIK(req)
+        resp = self._kin_stub.ComputeArmIK(req)
 
         if not resp.success:
-            raise ValueError(f'No solution found for the given target ({target})!')
+            raise ValueError(
+                f'No solution found for the given target ({target})!')
 
         return np.rad2deg(resp.arm_position.positions.positions).tolist()
 
@@ -224,9 +270,15 @@ class RightArm(OrbitaArm):
     _side = 'right'
     _kinematics_chain = (
         'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw', 'r_elbow_pitch',
-        'painteffector_disk_bottom', 'painteffector_disk_middle', 'painteffector_disk_top',
+        'r_dummy_wrist_roll', 'r_dummy_wrist_pitch', 'r_dummy_wrist_yaw',
     )
-    _required_joints = {
+    # _required_joints = {
+    #     'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw', 'r_elbow_pitch',
+    #     'painteffector_disk_bottom', 'painteffector_disk_middle', 'painteffector_disk_top',
+    # }
+
+    _required_joints = (
         'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw', 'r_elbow_pitch',
-        'painteffector_disk_bottom', 'painteffector_disk_middle', 'painteffector_disk_top',
-    }
+        'r_dummy_wrist_roll', 'r_dummy_wrist_pitch', 'r_dummy_wrist_yaw',
+        # 'painteffector_disk_bottom', 'painteffector_disk_middle', 'painteffector_disk_top',
+    )
