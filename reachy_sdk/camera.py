@@ -192,7 +192,6 @@ class Camera:
                 self._last_frame = cv.imdecode(buff, cv.IMREAD_COLOR)
                 self._got_img.set()
 
-
         self._t = Thread(target=poll_img)
         self._t.daemon = True
         self._t.start()
