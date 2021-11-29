@@ -23,6 +23,7 @@ setup(
         'reachy-sdk-api',
         'grpcio>=1.37',
         'protobuf>3',
+        'pyquaternion',
     ],
 
     extras_require={

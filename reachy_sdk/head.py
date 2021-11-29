@@ -5,12 +5,12 @@ Handles all specific method to an Head:
 - look_at function
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+from scipy.spatial.transform import Rotation
 
-from reachy_sdk_api.orbita_kinematics_pb2_grpc import OrbitaKinematicsStub
-from reachy_sdk_api.orbita_kinematics_pb2 import LookVector, OrbitaIKRequest, kinematics__pb2
+from pyquaternion import Quaternion
 
 from .device_holder import DeviceHolder
 from .joint import Joint
@@ -21,72 +21,37 @@ from .trajectory.interpolation import InterpolationMode
 class Head:
     """Head class.
 
-    It exposes the inverse kinematics of the head.
+    It exposes the neck orbita actuator at the base of the head.
     It provides look_at utility function to directly orient the head so it looks at a cartesian point
     expressed in Reachy's coordinate system.
     """
 
     _required_joints = {
-        'neck_disk_bottom', 'neck_disk_middle', 'neck_disk_top', 'l_antenna', 'r_antenna',
+        'neck_roll', 'neck_pitch', 'neck_yaw', 'l_antenna', 'r_antenna',
     }
 
     def __init__(self, joints: List[Joint], grpc_channel) -> None:
-        """Set up the head with its kinematics."""
+        """Set up the head."""
         found_joints = [j for j in joints if j.name in self._required_joints]
         if len(found_joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
         self.joints = DeviceHolder(found_joints)
-        self._disk_joints = [j for j in self.joints.values() if j.name in self.disks]
-
         self._setup_joints(found_joints)
 
-        self._stub = OrbitaKinematicsStub(grpc_channel)
+    @property
+    def neck_orbita_joints(self):
+        """Get the 3 joints composing the Orbita neck."""
+        return (self.joints.neck_roll, self.joints.neck_pitch, self.joints.neck_yaw)
 
     def __repr__(self) -> str:
         """Clean representation of an Head state."""
         return f'<Head joints={self.joints}>'
 
-    @property
-    def disks(self):
-        """Return the three orbita disks. The inverse kinematics will always return the disk position in the same order."""
-        return {j for j in self._required_joints if j in ['neck_disk_bottom', 'neck_disk_middle', 'neck_disk_top']}
-
     def _setup_joints(self, joints) -> None:
         for j in joints:
             if j.name in self._required_joints:
                 setattr(self, j.name, j)
-
-    def inverse_kinematics(self, quaternion: np.ndarray) -> List[float]:
-        """Compute the inverse kinematics of the head.
-
-        Given a target quaternion (where X is forward, Y is left and Z is upward),
-        it will try to compute disk positions solution to reach this target.
-
-        It will raise a ValueError if no solution is found.
-        """
-        quaternion = np.array(quaternion)
-        if quaternion.shape != (4, ):
-            raise ValueError('Quaternion should be given as np.array([x, y, z, w])!')
-        x, y, z, w = quaternion
-
-        req = OrbitaIKRequest(
-            q=kinematics__pb2.Quaternion(w=w, x=x, y=y, z=z),
-        )
-
-        solution = self._stub.ComputeOrbitaIK(req)
-        if not solution.success:
-            raise ValueError(f'Could not find a solution for the given quaternion {quaternion}!')
-
-        d = {
-            self.joints._get_device_from_id(joint_id): np.rad2deg(pos)
-
-            for joint_id, pos in zip(
-                solution.disk_position.ids,
-                solution.disk_position.positions,
-            )
-        }
-        return [d[j] for j in self._disk_joints]
 
     async def look_at_async(
         self,
@@ -136,6 +101,37 @@ class Head:
         )
 
     def _look_at(self, x: float, y: float, z: float) -> Dict[Joint, float]:
-        q = self._stub.GetQuaternionTransform(LookVector(x=x, y=y, z=z))
-        goal_positions = self.inverse_kinematics(np.array((q.x, q.y, q.z, q.w)))
-        return dict(zip(self._disk_joints, goal_positions))
+        q = _find_quaternion_transform([1, 0, 0], [x, y, z])
+        roll, pitch, yaw = np.rad2deg(Rotation.from_quat(q).as_euler('xyz'))
+        goal_positions = {
+            self.joints.neck_roll: roll,
+            self.joints.neck_pitch: pitch,
+            self.joints.neck_yaw: yaw,
+        }
+        return goal_positions
+
+
+def _find_quaternion_transform(
+    vect_origin: Tuple[float, float, float],
+    vect_dest: Tuple[float, float, float]
+) -> Tuple[float, float, float, float]:
+
+    vo = _norm(vect_origin)
+    vd = _norm(vect_dest)
+
+    v = np.cross(vo, vd)
+    v = _norm(v)
+
+    alpha = np.arccos(np.dot(vo, vd))
+    if np.isnan(alpha) or alpha < 1e-6:
+        return (0, 0, 0, 1)
+
+    q = Quaternion(axis=v, radians=alpha)
+    return (q.x, q.y, q.z, q.w)
+
+
+def _norm(v):
+    v = np.array(v)
+    if np.any(v):
+        v = v / np.linalg.norm(v)
+    return v

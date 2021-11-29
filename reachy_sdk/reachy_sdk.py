@@ -70,7 +70,7 @@ class ReachySDK:
 
         self._restart_signal_stub = restart_signal_pb2_grpc.RestartServiceStub(
             grpc.insecure_channel(f'{self._host}:{self._restart_port}')
-            )
+        )
 
         self._setup_joints()
         self._setup_arms()
