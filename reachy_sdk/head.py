@@ -102,7 +102,7 @@ class Head:
 
     def _look_at(self, x: float, y: float, z: float) -> Dict[Joint, float]:
         q = _find_quaternion_transform([1, 0, 0], [x, y, z])
-        roll, pitch, yaw = np.rad2deg(Rotation.from_quat(q).as_euler('xyz'))
+        roll, pitch, yaw = np.rad2deg(Rotation.from_quat(q).as_euler('XYZ'))
         goal_positions = {
             self.joints.neck_roll: roll,
             self.joints.neck_pitch: pitch,
