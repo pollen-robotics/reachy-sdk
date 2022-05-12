@@ -82,6 +82,9 @@ async def goto_async(
     if starting_positions is None:
         starting_positions = {j: j.present_position for j in goal_positions.keys()}
 
+    # Make sure both starting and goal positions are in the same order
+    starting_positions = {j: starting_positions[j] for j in goal_positions.keys()}
+
     length = round(duration * sampling_freq)
     if length < 1:
         raise ValueError('Goto length too short! (incoherent duration {duration} or sampling_freq {sampling_freq})!')
