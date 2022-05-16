@@ -80,7 +80,7 @@ async def goto_async(
             raise ValueError('goal_positions keys should be Joint!')
 
     if starting_positions is None:
-        starting_positions = {j: j.present_position for j in goal_positions.keys()}
+        starting_positions = {j: j.goal_position for j in goal_positions.keys()}
 
     length = round(duration * sampling_freq)
     if length < 1:
