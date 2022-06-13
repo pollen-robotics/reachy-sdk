@@ -59,11 +59,6 @@ class Camera:
 
         assert self._last_frame is not None
 
-        if self._side == 'right':
-            self._last_frame = np.rot90(self._last_frame, 1)
-        else:
-            self._last_frame = np.rot90(self._last_frame, -1)
-
         return self._last_frame
 
     def wait_for_new_frame(self) -> np.ndarray:
