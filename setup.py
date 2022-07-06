@@ -25,6 +25,7 @@ setup(
         'protobuf>3',
         'pyquaternion',
         'scipy',
+        'mobile-base-sdk',
     ],
 
     extras_require={
