@@ -54,8 +54,7 @@ class ReachySDK:
     - all force sensors (can be accessed directly via their name or via the force_sensors list).
     - all fans (can be accessed directly via their name or via the fans list).
 
-    The synchronisation with the robot is automatically launched at instanciation and is handled in background
-    automatically.
+    The synchronisation with the robot is automatically launched at instanciation and is handled in background automatically.
     """
 
     def __init__(
@@ -78,8 +77,7 @@ class ReachySDK:
             try:
                 self.mobile_base = MobileBaseSDK(self._host)
             except _InactiveRpcError:
-                self._logger.warning('Failed to connect to mobile base!')
-                return
+                raise IOError('Failed to connect to mobile base!')
 
         self._joints: List[Joint] = []
         self._fans: List[Fan] = []
