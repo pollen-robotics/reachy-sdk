@@ -79,5 +79,5 @@ The SDK APIs can be accessed here: [https://pollen-robotics.github.io/reachy-sdk
 
 This project adheres to the Contributor [code of conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [contact@pollen-robotics.com](mailto:contact@pollen-robotics.com).
 
-Visit [pollen-robotics.com](https://pollen-robotics.com) to learn more or visit [our forum](https://forum.pollen-robotics.com) if you have any questions.
+Visit [pollen-robotics.com](https://pollen-robotics.com) to learn more or join our [Dicord community](https://discord.com/invite/Kg3mZHTKgs) if you have any questions or want to share your ideas.
 Follow [@PollenRobotics](https://twitter.com/pollenrobotics) on Twitter for important announcements.
