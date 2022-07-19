@@ -13,8 +13,10 @@ import threading
 import time
 from typing import List
 from enum import Enum
+from logging import getLogger
 
 import grpc
+from grpc._channel import _InactiveRpcError
 from google.protobuf.empty_pb2 import Empty
 
 from reachy_sdk_api import camera_reachy_pb2_grpc
@@ -22,6 +24,8 @@ from reachy_sdk_api import joint_pb2, joint_pb2_grpc
 from reachy_sdk_api import fan_pb2_grpc
 from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
 from reachy_sdk_api import restart_signal_pb2, restart_signal_pb2_grpc
+
+from mobile_base_sdk import MobileBaseSDK
 
 from .arm import LeftArm, RightArm
 from .camera import Camera
@@ -53,13 +57,27 @@ class ReachySDK:
     The synchronisation with the robot is automatically launched at instanciation and is handled in background automatically.
     """
 
-    def __init__(self, host: str, sdk_port: int = 50055, camera_port: int = 50057, restart_port: int = 50059) -> None:
+    def __init__(
+                self,
+                host: str,
+                with_mobile_base: bool = False,
+                sdk_port: int = 50055,
+                camera_port: int = 50057,
+                restart_port: int = 50059
+                ) -> None:
         """Set up the connection with the robot."""
+        self._logger = getLogger()
         self._host = host
         self._sdk_port = sdk_port
         self._camera_port = camera_port
         self._restart_port = restart_port
         self._grpc_channel = grpc.insecure_channel(f'{self._host}:{self._sdk_port}')
+
+        if with_mobile_base:
+            try:
+                self.mobile_base = MobileBaseSDK(self._host)
+            except _InactiveRpcError:
+                raise IOError('Failed to connect to mobile base!')
 
         self._joints: List[Joint] = []
         self._fans: List[Fan] = []
