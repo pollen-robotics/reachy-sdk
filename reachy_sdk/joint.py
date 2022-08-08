@@ -80,6 +80,9 @@ class Joint(metaclass=MetaRegister):
         """Set a new value for a register of the Joint using the joint[register_name] = value notation."""
         self._state[field] = value
 
+        if field == 'compliant' and not value.value:
+            self._state['goal_position'] = self._state['present_position']
+
         async def set_in_loop():
             self._register_needing_sync.append(field)
             self._need_sync.set()
