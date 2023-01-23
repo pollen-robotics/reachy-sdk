@@ -290,7 +290,7 @@ class ReachySDK:
         """
         self._change_compliancy(part, compliant=True)
 
-    def turn_off_smoothly(self, part):
+    def turn_off_smoothly(self, part, duration: float = 2.0):
         """Turn smoothly the joints of the given Reachy's part compliant.
 
         Used to prevent parts from falling too hardwhen turned compliant.
@@ -309,7 +309,7 @@ class ReachySDK:
         for joint in req_part.joints.values():
             joint.torque_limit = 0.0
 
-        time.sleep(2.0)
+        time.sleep(duration)
 
         self._change_compliancy(part, compliant=True)
 
