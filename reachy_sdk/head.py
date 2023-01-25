@@ -26,13 +26,20 @@ class Head:
     expressed in Reachy's coordinate system.
     """
 
-    _required_joints = {
+    _required_joints = (
         'neck_roll', 'neck_pitch', 'neck_yaw', 'l_antenna', 'r_antenna',
-    }
+    )
 
     def __init__(self, joints: List[Joint], grpc_channel) -> None:
         """Set up the head."""
-        found_joints = [j for j in joints if j.name in self._required_joints]
+
+        def get_joint(name):
+            for j in joints:
+                if j.name == name:
+                    return j
+
+        found_joints = [get_joint(name) for name in self._required_joints]
+
         if len(found_joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 

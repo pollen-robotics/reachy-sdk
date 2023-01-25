@@ -36,7 +36,12 @@ class Arm(ABC):
         """Set up the arm with its kinematics."""
         self._kin_stub = ArmKinematicsStub(grpc_channel)
 
-        found_joints = [j for j in joints if j.name in self._required_joints]
+        def get_joint(name):
+            for j in joints:
+                if j.name == name:
+                    return j
+
+        found_joints = [get_joint(name) for name in self._required_joints]
         if len(found_joints) != len(self._required_joints):
             raise ValueError(f'Required joints not found {self._required_joints}')
 
@@ -159,12 +164,12 @@ class LeftArm(Arm):
         'l_elbow_pitch', 'l_forearm_yaw',
         'l_wrist_pitch', 'l_wrist_roll',
     )
-    _required_joints = {
+    _required_joints = (
         'l_shoulder_pitch', 'l_shoulder_roll', 'l_arm_yaw',
         'l_elbow_pitch', 'l_forearm_yaw',
         'l_wrist_pitch', 'l_wrist_roll',
         'l_gripper',
-    }
+    )
 
 
 class RightArm(Arm):
@@ -181,9 +186,9 @@ class RightArm(Arm):
         'r_elbow_pitch', 'r_forearm_yaw',
         'r_wrist_pitch', 'r_wrist_roll',
     )
-    _required_joints = {
+    _required_joints = (
         'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
         'r_elbow_pitch', 'r_forearm_yaw',
         'r_wrist_pitch', 'r_wrist_roll',
         'r_gripper',
-    }
+    )
