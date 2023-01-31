@@ -256,7 +256,11 @@ class ReachySDK:
         joint_stub = joint_pb2_grpc.JointServiceStub(async_channel)
 
         await asyncio.gather(
-            self._get_stream_update_loop(joint_stub, fields=[joint_pb2.JointField.PRESENT_POSITION], freq=100),
+            self._get_stream_update_loop(joint_stub, fields=[
+                joint_pb2.JointField.PRESENT_POSITION,
+                joint_pb2.JointField.PRESENT_SPEED,
+                joint_pb2.JointField.PRESENT_LOAD,
+            ], freq=100),
             self._get_stream_update_loop(joint_stub, fields=[joint_pb2.JointField.TEMPERATURE], freq=0.1),
             self._get_stream_sensor_loop(async_channel, freq=10),
             self._stream_commands_loop(joint_stub, freq=100),
