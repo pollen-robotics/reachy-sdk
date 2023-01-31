@@ -139,7 +139,7 @@ class Head:
         if not resp.success:
             raise ValueError(f'No solution found for the given target ({target})!')
 
-        return np.rad2deg(resp.neck_position.positions.positions).tolist()
+        return np.rad2deg(resp.neck_position.positions).tolist()
 
     def _joint_position_from_pos(self, joints_position: List[float]) -> JointPosition:
         return JointPosition(
@@ -155,7 +155,7 @@ class Head:
         sampling_freq: float = 100,
         interpolation_mode: InterpolationMode = InterpolationMode.LINEAR,
     ):
-        """Compute and send disks position to look at the (x, y, z) point in Reachy cartesian space.
+        """Compute and send neck rpy position to look at the (x, y, z) point in Reachy cartesian space (torso frame).
 
         X is forward, Y is left and Z is upward. They all expressed in meters.
 
@@ -179,7 +179,7 @@ class Head:
             sampling_freq: float = 100,
             interpolation_mode: InterpolationMode = InterpolationMode.LINEAR,
     ):
-        """Compute and send disks position to look at the (x, y, z) point in Reachy cartesian space.
+        """Compute and send neck rpy position to look at the (x, y, z) point in Reachy cartesian space (torso frame).
 
         X is forward, Y is left and Z is upward. They all expressed in meters.
 
@@ -196,7 +196,10 @@ class Head:
 
     def _look_at(self, x: float, y: float, z: float) -> Dict[Joint, float]:
         q = _find_quaternion_transform([1, 0, 0], [x, y, z])
-        roll, pitch, yaw = np.rad2deg(Rotation.from_quat(q).as_euler('XYZ'))
+
+        neckik = self.inverse_kinematics(q)
+        # roll, pitch, yaw = np.rad2deg(Rotation.from_quat(q).as_euler('XYZ'))
+        roll, pitch, yaw = neckik[0], neckik[1], neckik[2]
         goal_positions = {
             self.joints.neck_roll: roll,
             self.joints.neck_pitch: pitch,
@@ -211,7 +214,14 @@ def _find_quaternion_transform(
 ) -> Tuple[float, float, float, float]:
 
     vo = _norm(vect_origin)
-    vd = _norm(vect_dest)
+    # vd = _norm(vect_dest)
+
+    # ad-hoc translation to move in the torso frame (from urdf)
+    orbita_in_torso = (vect_dest[0]-0.015, vect_dest[1], vect_dest[2]-0.095)
+    # simple approximation, hopefully good enough...
+    head_in_torso = (orbita_in_torso[0]-0.02, orbita_in_torso[1], orbita_in_torso[2]-0.06105)
+
+    vd = _norm(head_in_torso)
 
     v = np.cross(vo, vd)
     v = _norm(v)
