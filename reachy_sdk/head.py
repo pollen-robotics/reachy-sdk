@@ -50,6 +50,7 @@ class Head:
             for j in joints:
                 if j.name == name:
                     return j
+            raise ValueError(f'Required joint {name} not found!')
 
         found_joints = [get_joint(name) for name in self._required_joints]
 
