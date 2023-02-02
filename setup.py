@@ -20,7 +20,7 @@ setup(
     install_requires=[
         'numpy',
         'opencv-python',
-        'reachy-sdk-api',
+        'reachy-sdk-api>=0.7.0',
         'grpcio>=1.37',
         'protobuf>3',
         'pyquaternion',
