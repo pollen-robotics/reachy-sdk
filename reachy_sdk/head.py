@@ -196,7 +196,6 @@ class Head:
         q = _find_quaternion_transform([1, 0, 0], [x, y, z])
 
         neckik = self.inverse_kinematics(q)
-        # roll, pitch, yaw = np.rad2deg(Rotation.from_quat(q).as_euler('XYZ'))
         roll, pitch, yaw = neckik[0], neckik[1], neckik[2]
         goal_positions = {
             self.joints.neck_roll: roll,
@@ -212,7 +211,6 @@ def _find_quaternion_transform(
 ) -> Tuple[float, float, float, float]:
 
     vo = _norm(vect_origin)
-    # vd = _norm(vect_dest)
 
     # ad-hoc translation to move in the torso frame (from urdf)
     orbita_in_torso = (vect_dest[0]-0.015, vect_dest[1], vect_dest[2]-0.095)
