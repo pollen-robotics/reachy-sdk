@@ -14,13 +14,13 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='reachy-sdk',
-    version='0.5.4',
+    version='0.7.0',
     packages=find_packages(exclude=['tests']),
 
     install_requires=[
         'numpy',
         'opencv-python',
-        'reachy-sdk-api',
+        'reachy-sdk-api>=0.7.0',
         'grpcio>=1.37',
         'protobuf>3',
         'pyquaternion',
