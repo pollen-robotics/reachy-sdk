@@ -8,7 +8,6 @@ Handles all specific method to an Head:
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from pyquaternion import Quaternion
 
@@ -43,7 +42,6 @@ class Head:
 
     def __init__(self, joints: List[Joint], grpc_channel) -> None:
         """Set up the head."""
-
         self._kin_stub = HeadKinematicsStub(grpc_channel)
 
         def get_joint(name):
@@ -114,7 +112,6 @@ class Head:
 
         You can also specify a basic joint configuration as a prior for the solution.
         """
-
         if q0 is not None and (len(q0) != len(self._kinematics_chain)):
             raise ValueError(f'q0 should be length {len(self._kinematics_chain)} (got {len(q0)} instead)!')
 
