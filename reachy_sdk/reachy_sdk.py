@@ -320,6 +320,28 @@ class ReachySDK:
         for joint in req_part.joints.values():
             joint.torque_limit = 100.0
 
+    def _set_torques(self, part, percent: float = 100.0):
+        """Set the torque_limit of the given Reachy's part. Use a value between 0 and 100.
+
+        The requested part can be 'l_arm', 'r_arm', 'head' or 'reachy'.
+        Having part = 'reachy' corresponds to turning all avaible joints compliant.
+        """
+        if part not in [p.name.lower() for p in ReachyParts]:
+            raise ValueError("Can only change the torque to either 'reachy', 'l_arm', 'r_arm' or 'head'.")
+
+        if part == 'reachy':
+            req_part = self
+        else:
+            req_part = getattr(self, part)
+
+        if percent > 100.0:
+            percent = 100.0
+        elif percent < 0.0:
+            percent = 0.0
+
+        for joint in req_part.joints.values():
+            joint.torque_limit = percent
+
     def _restart(self):
         self._restart_signal_stub.SendRestartSignal(
             restart_signal_pb2.RestartCmd(
