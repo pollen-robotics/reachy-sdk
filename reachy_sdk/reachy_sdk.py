@@ -20,6 +20,7 @@ from grpc._channel import _InactiveRpcError
 from google.protobuf.empty_pb2 import Empty
 
 from reachy_sdk_api import camera_reachy_pb2_grpc
+from reachy_sdk_api import config_pb2_grpc
 from reachy_sdk_api import joint_pb2, joint_pb2_grpc
 from reachy_sdk_api import fan_pb2_grpc
 from reachy_sdk_api import sensor_pb2, sensor_pb2_grpc
@@ -90,6 +91,7 @@ class ReachySDK:
             grpc.insecure_channel(f'{self._host}:{self._restart_port}')
         )
 
+        self._get_config()
         self._setup_joints()
         self._setup_arms()
         self._setup_head()
@@ -115,6 +117,10 @@ class ReachySDK:
         return f'''<Reachy host="{self._host}" joints=\n\t{
             s
         }\n>'''
+
+    def _get_config(self) -> None:
+        config_stub = config_pb2_grpc.ConfigServiceStub(self._grpc_channel)
+        self._config = config_stub.GetReachyConfig(Empty()).config
 
     def _setup_joints(self):
         joint_stub = joint_pb2_grpc.JointServiceStub(self._grpc_channel)
@@ -148,7 +154,7 @@ class ReachySDK:
 
     def _setup_head(self):
         try:
-            head = Head(self._joints, self._grpc_channel)
+            head = Head(self._config, self._joints, self._grpc_channel)
             setattr(self, 'head', head)
         except ValueError:
             pass

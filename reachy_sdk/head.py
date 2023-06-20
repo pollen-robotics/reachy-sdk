@@ -36,12 +36,17 @@ class Head:
     expressed in Reachy's coordinate system.
     """
 
-    _required_joints = (
-        'neck_roll', 'neck_pitch', 'neck_yaw', 'l_antenna', 'r_antenna',
-    )
-
-    def __init__(self, joints: List[Joint], grpc_channel) -> None:
+    def __init__(self, config, joints: List[Joint], grpc_channel) -> None:
         """Set up the head."""
+        if 'no_head' in config:
+            self._required_joints = (
+                'neck_roll', 'neck_pitch', 'neck_yaw',
+            )
+        else:
+            self._required_joints = (
+                'neck_roll', 'neck_pitch', 'neck_yaw', 'l_antenna', 'r_antenna',
+            )
+
         self._kin_stub = HeadKinematicsStub(grpc_channel)
 
         def get_joint(name):
