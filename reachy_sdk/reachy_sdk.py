@@ -95,9 +95,9 @@ class ReachySDK:
         self._setup_joints()
         self._setup_arms()
         self._setup_head()
-        self._setup_fans()
-        self._setup_force_sensors()
-        self._setup_cameras()
+        # self._setup_fans()
+        # self._setup_force_sensors()
+        # self._setup_cameras()
 
         self.fans = DeviceHolder(self._fans)
         self.force_sensors = DeviceHolder(self._force_sensors)

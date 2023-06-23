@@ -183,13 +183,13 @@ class RightArm(Arm):
 
     _side = 'right'
     _kinematics_chain = (
-        'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
-        'r_elbow_pitch', 'r_forearm_yaw',
-        'r_wrist_pitch', 'r_wrist_roll',
+        'r_shoulder_pitch', 'r_shoulder_roll', 
+        'r_elbow_yaw', 'r_elbow_pitch', 
+        'r_wrist_roll', 'r_wrist_pitch', 'r_wrist_yaw',
     )
     _required_joints = (
-        'r_shoulder_pitch', 'r_shoulder_roll', 'r_arm_yaw',
-        'r_elbow_pitch', 'r_forearm_yaw',
-        'r_wrist_pitch', 'r_wrist_roll',
-        'r_gripper',
+        'r_shoulder_pitch', 'r_shoulder_roll', 
+        'r_elbow_yaw', 'r_elbow_pitch', 
+        'r_wrist_roll', 'r_wrist_pitch', 'r_wrist_yaw',
+        'r_gripper_finger',
     )

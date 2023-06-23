@@ -44,7 +44,7 @@ class Head:
             )
         else:
             self._required_joints = (
-                'neck_roll', 'neck_pitch', 'neck_yaw', 'l_antenna', 'r_antenna',
+                'neck_roll', 'neck_pitch', 'neck_yaw',
             )
 
         self._kin_stub = HeadKinematicsStub(grpc_channel)
