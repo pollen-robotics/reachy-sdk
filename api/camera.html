@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>reachy_sdk.camera &#8212; Reachy SDK v1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0ec76b63"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reachy_sdk.device_holder" href="device_holder.html" />
+    <link rel="prev" title="reachy_sdk.arm" href="arm.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-reachy_sdk.camera">
+<span id="reachy-sdk-camera"></span><h1><a class="reference internal" href="#module-reachy_sdk.camera" title="reachy_sdk.camera"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.camera</span></code></a><a class="headerlink" href="#module-reachy_sdk.camera" title="Permalink to this heading">¶</a></h1>
+<p>Camera Reachy module.</p>
+<p>This module lets you access always up-to-date image from the camera.
+The synchronisation is done in background and only started when you need it.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reachy_sdk.camera.</span></span><span class="sig-name descname"><span class="pre">Camera</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">side</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stub</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.camera.Camera" title="Permalink to this definition">¶</a></dt>
+<dd><p>The camera class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>side</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – </p></li>
+<li><p><strong>stub</strong> (<em>CameraServiceStub</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.focus">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">focus</span></span><a class="headerlink" href="#reachy_sdk.camera.Camera.focus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get focus value.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.last_frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">last_frame</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#reachy_sdk.camera.Camera.last_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the last retrieved frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.start_autofocus">
+<span class="sig-name descname"><span class="pre">start_autofocus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.camera.Camera.start_autofocus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start autofocus.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.stop_autofocus">
+<span class="sig-name descname"><span class="pre">stop_autofocus</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.camera.Camera.stop_autofocus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop autofocus.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.wait_for_new_frame">
+<span class="sig-name descname"><span class="pre">wait_for_new_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.camera.Camera.wait_for_new_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Block until the reception of a new frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.zoom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoom</span></span><a class="headerlink" href="#reachy_sdk.camera.Camera.zoom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get zoom value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.zoom_homing">
+<span class="sig-name descname"><span class="pre">zoom_homing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.camera.Camera.zoom_homing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a homing to reset zoom position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.zoom_level">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoom_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#reachy_sdk.camera.ZoomLevel" title="reachy_sdk.camera.ZoomLevel"><span class="pre">ZoomLevel</span></a></em><a class="headerlink" href="#reachy_sdk.camera.Camera.zoom_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current zoom level.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="reachy_sdk.camera.Camera.zoom_speed">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoom_speed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#reachy_sdk.camera.Camera.zoom_speed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current zoom speed.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="reachy_sdk.camera.ZoomLevel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reachy_sdk.camera.</span></span><span class="sig-name descname"><span class="pre">ZoomLevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.camera.ZoomLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>The zoom level options.</p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Reachy SDK</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachyParts"><code class="docutils literal notranslate"><span class="pre">ReachyParts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachySDK"><code class="docutils literal notranslate"><span class="pre">ReachySDK</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.flush_communication"><code class="docutils literal notranslate"><span class="pre">flush_communication()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="reachy_sdk.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="arm.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.arm</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.camera</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="device_holder.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.device_holder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fan.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.fan</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="force_sensor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.force_sensor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="head.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.head</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="joint.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.joint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="register.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.register</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">&lt;no title&gt;</a><ul>
+  <li><a href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul>
+      <li>Previous: <a href="arm.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.arm</span></code></a></li>
+      <li>Next: <a href="device_holder.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.device_holder</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Pollen Robotics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/api/camera.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

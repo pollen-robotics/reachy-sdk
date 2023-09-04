@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>&lt;no title&gt; &#8212; Reachy SDK v1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0ec76b63"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reachy_sdk" href="reachy_sdk.html" />
+    <link rel="prev" title="Welcome to Reachy SDK APIs!" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachyParts"><code class="docutils literal notranslate"><span class="pre">ReachyParts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachySDK"><code class="docutils literal notranslate"><span class="pre">ReachySDK</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachySDK.turn_off"><code class="docutils literal notranslate"><span class="pre">ReachySDK.turn_off()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachySDK.turn_off_smoothly"><code class="docutils literal notranslate"><span class="pre">ReachySDK.turn_off_smoothly()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachySDK.turn_on"><code class="docutils literal notranslate"><span class="pre">ReachySDK.turn_on()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.flush_communication"><code class="docutils literal notranslate"><span class="pre">flush_communication()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="trajectory/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.trajectory</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="trajectory/index.html#reachy_sdk.trajectory.goto"><code class="docutils literal notranslate"><span class="pre">goto()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="trajectory/index.html#reachy_sdk.trajectory.goto_async"><code class="docutils literal notranslate"><span class="pre">goto_async()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="trajectory/index.html#submodules">Submodules</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="trajectory/interpolation.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.trajectory.interpolation</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="trajectory/interpolation.html#reachy_sdk.trajectory.interpolation.InterpolationMode"><code class="docutils literal notranslate"><span class="pre">InterpolationMode</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="trajectory/interpolation.html#reachy_sdk.trajectory.interpolation.InterpolationMode.LINEAR"><code class="docutils literal notranslate"><span class="pre">InterpolationMode.LINEAR()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="trajectory/interpolation.html#reachy_sdk.trajectory.interpolation.InterpolationMode.MINIMUM_JERK"><code class="docutils literal notranslate"><span class="pre">InterpolationMode.MINIMUM_JERK()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="trajectory/interpolation.html#reachy_sdk.trajectory.interpolation.linear"><code class="docutils literal notranslate"><span class="pre">linear()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="trajectory/interpolation.html#reachy_sdk.trajectory.interpolation.minimum_jerk"><code class="docutils literal notranslate"><span class="pre">minimum_jerk()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arm.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.arm</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="arm.html#reachy_sdk.arm.Arm"><code class="docutils literal notranslate"><span class="pre">Arm</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arm.html#reachy_sdk.arm.Arm.forward_kinematics"><code class="docutils literal notranslate"><span class="pre">Arm.forward_kinematics()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="arm.html#reachy_sdk.arm.Arm.inverse_kinematics"><code class="docutils literal notranslate"><span class="pre">Arm.inverse_kinematics()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="arm.html#reachy_sdk.arm.LeftArm"><code class="docutils literal notranslate"><span class="pre">LeftArm</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arm.html#reachy_sdk.arm.LeftArm.forward_kinematics"><code class="docutils literal notranslate"><span class="pre">LeftArm.forward_kinematics()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="arm.html#reachy_sdk.arm.LeftArm.inverse_kinematics"><code class="docutils literal notranslate"><span class="pre">LeftArm.inverse_kinematics()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="arm.html#reachy_sdk.arm.RightArm"><code class="docutils literal notranslate"><span class="pre">RightArm</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="arm.html#reachy_sdk.arm.RightArm.forward_kinematics"><code class="docutils literal notranslate"><span class="pre">RightArm.forward_kinematics()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="arm.html#reachy_sdk.arm.RightArm.inverse_kinematics"><code class="docutils literal notranslate"><span class="pre">RightArm.inverse_kinematics()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="camera.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.camera</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera"><code class="docutils literal notranslate"><span class="pre">Camera</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.focus"><code class="docutils literal notranslate"><span class="pre">Camera.focus</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.last_frame"><code class="docutils literal notranslate"><span class="pre">Camera.last_frame</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.start_autofocus"><code class="docutils literal notranslate"><span class="pre">Camera.start_autofocus()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.stop_autofocus"><code class="docutils literal notranslate"><span class="pre">Camera.stop_autofocus()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.wait_for_new_frame"><code class="docutils literal notranslate"><span class="pre">Camera.wait_for_new_frame()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.zoom"><code class="docutils literal notranslate"><span class="pre">Camera.zoom</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.zoom_homing"><code class="docutils literal notranslate"><span class="pre">Camera.zoom_homing()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.zoom_level"><code class="docutils literal notranslate"><span class="pre">Camera.zoom_level</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="camera.html#reachy_sdk.camera.Camera.zoom_speed"><code class="docutils literal notranslate"><span class="pre">Camera.zoom_speed</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#reachy_sdk.camera.ZoomLevel"><code class="docutils literal notranslate"><span class="pre">ZoomLevel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="device_holder.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.device_holder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="device_holder.html#reachy_sdk.device_holder.DeviceHolder"><code class="docutils literal notranslate"><span class="pre">DeviceHolder</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="device_holder.html#reachy_sdk.device_holder.DeviceHolder.items"><code class="docutils literal notranslate"><span class="pre">DeviceHolder.items()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="device_holder.html#reachy_sdk.device_holder.DeviceHolder.keys"><code class="docutils literal notranslate"><span class="pre">DeviceHolder.keys()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="device_holder.html#reachy_sdk.device_holder.DeviceHolder.values"><code class="docutils literal notranslate"><span class="pre">DeviceHolder.values()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="fan.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.fan</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="fan.html#reachy_sdk.fan.Fan"><code class="docutils literal notranslate"><span class="pre">Fan</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="fan.html#reachy_sdk.fan.Fan.is_on"><code class="docutils literal notranslate"><span class="pre">Fan.is_on</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="fan.html#reachy_sdk.fan.Fan.name"><code class="docutils literal notranslate"><span class="pre">Fan.name</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="fan.html#reachy_sdk.fan.Fan.off"><code class="docutils literal notranslate"><span class="pre">Fan.off()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="fan.html#reachy_sdk.fan.Fan.on"><code class="docutils literal notranslate"><span class="pre">Fan.on()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="force_sensor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.force_sensor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="force_sensor.html#reachy_sdk.force_sensor.ForceSensor"><code class="docutils literal notranslate"><span class="pre">ForceSensor</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="force_sensor.html#reachy_sdk.force_sensor.ForceSensor.force"><code class="docutils literal notranslate"><span class="pre">ForceSensor.force</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="force_sensor.html#reachy_sdk.force_sensor.ForceSensor.name"><code class="docutils literal notranslate"><span class="pre">ForceSensor.name</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="force_sensor.html#reachy_sdk.force_sensor.ForceSensor.uid"><code class="docutils literal notranslate"><span class="pre">ForceSensor.uid</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="head.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.head</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="head.html#reachy_sdk.head.Head"><code class="docutils literal notranslate"><span class="pre">Head</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="head.html#reachy_sdk.head.Head.forward_kinematics"><code class="docutils literal notranslate"><span class="pre">Head.forward_kinematics()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="head.html#reachy_sdk.head.Head.inverse_kinematics"><code class="docutils literal notranslate"><span class="pre">Head.inverse_kinematics()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="head.html#reachy_sdk.head.Head.look_at"><code class="docutils literal notranslate"><span class="pre">Head.look_at()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="head.html#reachy_sdk.head.Head.look_at_async"><code class="docutils literal notranslate"><span class="pre">Head.look_at_async()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="head.html#reachy_sdk.head.Head.neck_orbita_joints"><code class="docutils literal notranslate"><span class="pre">Head.neck_orbita_joints</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="joint.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.joint</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="joint.html#reachy_sdk.joint.Joint"><code class="docutils literal notranslate"><span class="pre">Joint</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="joint.html#reachy_sdk.joint.Joint.registers"><code class="docutils literal notranslate"><span class="pre">Joint.registers()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="register.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.register</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="register.html#reachy_sdk.register.MetaRegister"><code class="docutils literal notranslate"><span class="pre">MetaRegister</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="register.html#reachy_sdk.register.MetaRegister.mro"><code class="docutils literal notranslate"><span class="pre">MetaRegister.mro()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="register.html#reachy_sdk.register.Register"><code class="docutils literal notranslate"><span class="pre">Register</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="register.html#reachy_sdk.register.Register.unwrapped_value"><code class="docutils literal notranslate"><span class="pre">Register.unwrapped_value()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="register.html#reachy_sdk.register.Register.wrapped_value"><code class="docutils literal notranslate"><span class="pre">Register.wrapped_value()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#package-contents">Package Contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ReachySDK.html"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReachySDK</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ReachySDK.html#reachy_sdk.ReachySDK"><code class="docutils literal notranslate"><span class="pre">ReachySDK</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="ReachySDK.html#reachy_sdk.ReachySDK.turn_off"><code class="docutils literal notranslate"><span class="pre">ReachySDK.turn_off()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="ReachySDK.html#reachy_sdk.ReachySDK.turn_off_smoothly"><code class="docutils literal notranslate"><span class="pre">ReachySDK.turn_off_smoothly()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="ReachySDK.html#reachy_sdk.ReachySDK.turn_on"><code class="docutils literal notranslate"><span class="pre">ReachySDK.turn_on()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Reachy SDK</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">Welcome to Reachy SDK APIs!</a></li>
+      <li>Next: <a href="reachy_sdk.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Pollen Robotics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/api/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

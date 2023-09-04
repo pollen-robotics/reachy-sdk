@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>reachy_sdk.arm &#8212; Reachy SDK v1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0ec76b63"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reachy_sdk.camera" href="camera.html" />
+    <link rel="prev" title="reachy_sdk.trajectory.interpolation" href="trajectory/interpolation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-reachy_sdk.arm">
+<span id="reachy-sdk-arm"></span><h1><a class="reference internal" href="#module-reachy_sdk.arm" title="reachy_sdk.arm"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.arm</span></code></a><a class="headerlink" href="#module-reachy_sdk.arm" title="Permalink to this heading">¶</a></h1>
+<p>Reachy Arm module.</p>
+<p>Handles all specific method to an Arm (left and/or right) especially:
+- the forward kinematics
+- the inverse kinematics</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="reachy_sdk.arm.Arm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reachy_sdk.arm.</span></span><span class="sig-name descname"><span class="pre">Arm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">joints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grpc_channel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.Arm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Arm abstract class used for both left/right arms.</p>
+<p>It exposes the kinematics of the arm:
+- you can access the joints actually used in the kinematic chain,
+- you can compute the forward and inverse kinematics</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>joints</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference internal" href="joint.html#reachy_sdk.joint.Joint" title="reachy_sdk.joint.Joint"><em>Joint</em></a><em>]</em>) – </p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.arm.Arm.forward_kinematics">
+<span class="sig-name descname"><span class="pre">forward_kinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">joints_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.Arm.forward_kinematics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the forward kinematics of the arm.</p>
+<p>It will return the pose 4x4 matrix (as a numpy array) expressed in Reachy coordinate systems.
+You can either specify a given joints position, otherwise it will use the current robot position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>joints_position</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.arm.Arm.inverse_kinematics">
+<span class="sig-name descname"><span class="pre">inverse_kinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.Arm.inverse_kinematics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inverse kinematics of the arm.</p>
+<p>Given a pose 4x4 target matrix (as a numpy array) expressed in Reachy coordinate systems,
+it will try to compute a joint solution to reach this target (or get close).</p>
+<p>It will raise a ValueError if no solution is found.</p>
+<p>You can also specify a basic joint configuration as a prior for the solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><em>ndarray</em></a>) – </p></li>
+<li><p><strong>q0</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="reachy_sdk.arm.LeftArm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reachy_sdk.arm.</span></span><span class="sig-name descname"><span class="pre">LeftArm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">joints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grpc_channel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.LeftArm" title="Permalink to this definition">¶</a></dt>
+<dd><p>LeftArm class, all the work is actually done by the ABC Arm class.</p>
+<p>It exposes the kinematics of the arm:
+- you can access the joints actually used in the kinematic chain,
+- you can compute the forward and inverse kinematics</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>joints</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference internal" href="joint.html#reachy_sdk.joint.Joint" title="reachy_sdk.joint.Joint"><em>Joint</em></a><em>]</em>) – </p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.arm.LeftArm.forward_kinematics">
+<span class="sig-name descname"><span class="pre">forward_kinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">joints_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.LeftArm.forward_kinematics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the forward kinematics of the arm.</p>
+<p>It will return the pose 4x4 matrix (as a numpy array) expressed in Reachy coordinate systems.
+You can either specify a given joints position, otherwise it will use the current robot position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>joints_position</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.arm.LeftArm.inverse_kinematics">
+<span class="sig-name descname"><span class="pre">inverse_kinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.LeftArm.inverse_kinematics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inverse kinematics of the arm.</p>
+<p>Given a pose 4x4 target matrix (as a numpy array) expressed in Reachy coordinate systems,
+it will try to compute a joint solution to reach this target (or get close).</p>
+<p>It will raise a ValueError if no solution is found.</p>
+<p>You can also specify a basic joint configuration as a prior for the solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><em>ndarray</em></a>) – </p></li>
+<li><p><strong>q0</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="reachy_sdk.arm.RightArm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reachy_sdk.arm.</span></span><span class="sig-name descname"><span class="pre">RightArm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">joints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grpc_channel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.RightArm" title="Permalink to this definition">¶</a></dt>
+<dd><p>RightArm class, all the work is actually done by the ABC Arm class.</p>
+<p>It exposes the kinematics of the arm:
+- you can access the joints actually used in the kinematic chain,
+- you can compute the forward and inverse kinematics</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>joints</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference internal" href="joint.html#reachy_sdk.joint.Joint" title="reachy_sdk.joint.Joint"><em>Joint</em></a><em>]</em>) – </p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.arm.RightArm.forward_kinematics">
+<span class="sig-name descname"><span class="pre">forward_kinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">joints_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.RightArm.forward_kinematics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the forward kinematics of the arm.</p>
+<p>It will return the pose 4x4 matrix (as a numpy array) expressed in Reachy coordinate systems.
+You can either specify a given joints position, otherwise it will use the current robot position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>joints_position</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.arm.RightArm.inverse_kinematics">
+<span class="sig-name descname"><span class="pre">inverse_kinematics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.arm.RightArm.inverse_kinematics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inverse kinematics of the arm.</p>
+<p>Given a pose 4x4 target matrix (as a numpy array) expressed in Reachy coordinate systems,
+it will try to compute a joint solution to reach this target (or get close).</p>
+<p>It will raise a ValueError if no solution is found.</p>
+<p>You can also specify a basic joint configuration as a prior for the solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><em>ndarray</em></a>) – </p></li>
+<li><p><strong>q0</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Reachy SDK</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachyParts"><code class="docutils literal notranslate"><span class="pre">ReachyParts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachySDK"><code class="docutils literal notranslate"><span class="pre">ReachySDK</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.flush_communication"><code class="docutils literal notranslate"><span class="pre">flush_communication()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="reachy_sdk.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.arm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="camera.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.camera</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="device_holder.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.device_holder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fan.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.fan</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="force_sensor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.force_sensor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="head.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.head</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="joint.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.joint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="register.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.register</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">&lt;no title&gt;</a><ul>
+  <li><a href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul>
+      <li>Previous: <a href="trajectory/interpolation.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.trajectory.interpolation</span></code></a></li>
+      <li>Next: <a href="camera.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.camera</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Pollen Robotics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/api/arm.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

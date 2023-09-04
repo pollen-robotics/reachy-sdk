@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ReachySDK &#8212; Reachy SDK v1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0ec76b63"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="reachy_sdk.register" href="register.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="reachysdk">
+<h1><code class="xref py py-class docutils literal notranslate"><span class="pre">ReachySDK</span></code><a class="headerlink" href="#reachysdk" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="reachy_sdk.ReachySDK">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reachy_sdk.</span></span><span class="sig-name descname"><span class="pre">ReachySDK</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_mobile_base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdk_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50055</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50057</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restart_port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50059</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.ReachySDK" title="Permalink to this definition">¶</a></dt>
+<dd><p>The ReachySDK class handles the connection with your robot.</p>
+<p>It holds:</p>
+<ul class="simple">
+<li><p>all joints (can be accessed directly via their name or via the joints list).</p></li>
+<li><p>all force sensors (can be accessed directly via their name or via the force_sensors list).</p></li>
+<li><p>all fans (can be accessed directly via their name or via the fans list).</p></li>
+</ul>
+<p>The synchronisation with the robot is automatically launched at instanciation and is handled in background automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>host</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – </p></li>
+<li><p><strong>with_mobile_base</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>sdk_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>camera_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>restart_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.ReachySDK.turn_off">
+<span class="sig-name descname"><span class="pre">turn_off</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.ReachySDK.turn_off" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn the joints of the given Reachy’s part compliant.</p>
+<p>The requested part can be ‘l_arm’, ‘r_arm’, ‘head’ or ‘reachy’.
+Having part = ‘reachy’ corresponds to turning all avaible joints compliant.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.ReachySDK.turn_off_smoothly">
+<span class="sig-name descname"><span class="pre">turn_off_smoothly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.ReachySDK.turn_off_smoothly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn smoothly the joints of the given Reachy’s part compliant.</p>
+<p>Used to prevent parts from falling too hardwhen turned compliant.</p>
+<p>The requested part can be ‘l_arm’, ‘r_arm’, ‘head’ or ‘reachy’.
+Having part = ‘reachy’ corresponds to turning all avaible joints compliant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>duration</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.ReachySDK.turn_on">
+<span class="sig-name descname"><span class="pre">turn_on</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.ReachySDK.turn_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn the joints of the given Reachy’s part stiff.</p>
+<p>The requested part can be ‘l_arm’, ‘r_arm’, ‘head’ or ‘reachy’.
+Having part = ‘reachy’ corresponds to turning all avaible joints stiff.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Reachy SDK</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachyParts"><code class="docutils literal notranslate"><span class="pre">ReachyParts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachySDK"><code class="docutils literal notranslate"><span class="pre">ReachySDK</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.flush_communication"><code class="docutils literal notranslate"><span class="pre">flush_communication()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#submodules">Submodules</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="reachy_sdk.html#package-contents">Package Contents</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReachySDK</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">&lt;no title&gt;</a><ul>
+  <li><a href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul>
+      <li>Previous: <a href="register.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.register</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Pollen Robotics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/api/ReachySDK.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

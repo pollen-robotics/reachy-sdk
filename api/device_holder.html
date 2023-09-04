@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>reachy_sdk.device_holder &#8212; Reachy SDK v1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0ec76b63"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="reachy_sdk.fan" href="fan.html" />
+    <link rel="prev" title="reachy_sdk.camera" href="camera.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-reachy_sdk.device_holder">
+<span id="reachy-sdk-device-holder"></span><h1><a class="reference internal" href="#module-reachy_sdk.device_holder" title="reachy_sdk.device_holder"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.device_holder</span></code></a><a class="headerlink" href="#module-reachy_sdk.device_holder" title="Permalink to this heading">¶</a></h1>
+<p>Generic Device Holder.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="reachy_sdk.device_holder.DeviceHolder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">reachy_sdk.device_holder.</span></span><span class="sig-name descname"><span class="pre">DeviceHolder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.device_holder.DeviceHolder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Device holder class which contains a specific type of device (eg. Fan, ForceSensor, etc).</p>
+<p>Its only purpose is to not overcrowed the ReachySDK class with all devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.11)"><em>List</em></a><em>[</em><a class="reference internal" href="fan.html#reachy_sdk.fan.Fan" title="reachy_sdk.fan.Fan"><em>Fan</em></a><em> | </em><a class="reference internal" href="force_sensor.html#reachy_sdk.force_sensor.ForceSensor" title="reachy_sdk.force_sensor.ForceSensor"><em>ForceSensor</em></a><em> | </em><a class="reference internal" href="joint.html#reachy_sdk.joint.Joint" title="reachy_sdk.joint.Joint"><em>Joint</em></a><em>]</em>) – </p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.device_holder.DeviceHolder.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.device_holder.DeviceHolder.items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dict item view of the contained devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ItemsView" title="(in Python v3.11)"><em>ItemsView</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a>, <a class="reference internal" href="fan.html#reachy_sdk.fan.Fan" title="reachy_sdk.fan.Fan"><em>Fan</em></a> | <a class="reference internal" href="force_sensor.html#reachy_sdk.force_sensor.ForceSensor" title="reachy_sdk.force_sensor.ForceSensor"><em>ForceSensor</em></a> | <a class="reference internal" href="joint.html#reachy_sdk.joint.Joint" title="reachy_sdk.joint.Joint"><em>Joint</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.device_holder.DeviceHolder.keys">
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.device_holder.DeviceHolder.keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dict key view of the contained devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.KeysView" title="(in Python v3.11)"><em>KeysView</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="reachy_sdk.device_holder.DeviceHolder.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#reachy_sdk.device_holder.DeviceHolder.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dict value view of the contained devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.ValuesView" title="(in Python v3.11)"><em>ValuesView</em></a>[<a class="reference internal" href="fan.html#reachy_sdk.fan.Fan" title="reachy_sdk.fan.Fan"><em>Fan</em></a> | <a class="reference internal" href="force_sensor.html#reachy_sdk.force_sensor.ForceSensor" title="reachy_sdk.force_sensor.ForceSensor"><em>ForceSensor</em></a> | <a class="reference internal" href="joint.html#reachy_sdk.joint.Joint" title="reachy_sdk.joint.Joint"><em>Joint</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Reachy SDK</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachyParts"><code class="docutils literal notranslate"><span class="pre">ReachyParts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.ReachySDK"><code class="docutils literal notranslate"><span class="pre">ReachySDK</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#reachy_sdk.reachy_sdk.flush_communication"><code class="docutils literal notranslate"><span class="pre">flush_communication()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="reachy_sdk.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="arm.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.arm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="camera.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.camera</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.device_holder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fan.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.fan</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="force_sensor.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.force_sensor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="head.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.head</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="joint.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.joint</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="register.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.register</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="reachy_sdk.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">&lt;no title&gt;</a><ul>
+  <li><a href="reachy_sdk.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk</span></code></a><ul>
+      <li>Previous: <a href="camera.html" title="previous chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.camera</span></code></a></li>
+      <li>Next: <a href="fan.html" title="next chapter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">reachy_sdk.fan</span></code></a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Pollen Robotics.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="../_sources/api/device_holder.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
