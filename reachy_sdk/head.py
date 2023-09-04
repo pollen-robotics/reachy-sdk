@@ -38,7 +38,7 @@ class Head:
 
     def __init__(self, config, joints: List[Joint], grpc_channel) -> None:
         """Set up the head."""
-        if 'no_head' in config:
+        if 'no_head' in config or config == 'orbita':
             self._required_joints = (
                 'neck_roll', 'neck_pitch', 'neck_yaw',
             )
