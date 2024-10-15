@@ -87,7 +87,7 @@ async def goto_async(
 
     length = round(duration * sampling_freq)
     if length < 1:
-        raise ValueError('Goto length too short! (incoherent duration {duration} or sampling_freq {sampling_freq})!')
+        raise ValueError(f'Goto length too short! (incoherent duration {duration} or sampling_freq {sampling_freq})!')
 
     joints = starting_positions.keys()
     dt = 1 / sampling_freq
